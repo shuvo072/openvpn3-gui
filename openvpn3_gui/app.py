@@ -1,7 +1,8 @@
 """Native GTK desktop interface for the installed OpenVPN 3 CLI."""
 
 from concurrent.futures import ThreadPoolExecutor
-from collections import Counter
+from collections import Counter, OrderedDict
+import time
 from pathlib import Path
 import gi
 
@@ -21,7 +22,9 @@ from .backend import (
 from .widgets import CommandForm, CommandWindow, button, confirm, label, scrolled
 
 
-from .theme import CSS
+from .appearance import Appearance
+from .traffic import TrafficHistory
+from .traffic_widget import TrafficPanel
 
 
 def application_icon_path():
@@ -57,6 +60,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.selected_key = None
         self.closed = False
         self.layout_pending = False
+        self.traffic_records = OrderedDict()
+        self.traffic_inflight = False
         self.selected_profile = None
         self.selected_session = None
         self.set_default_size(1240, 820)
@@ -66,9 +71,17 @@ class MainWindow(Gtk.ApplicationWindow):
         self.connect("key-press-event", self.on_shortcut)
         header = Gtk.HeaderBar(
             title="OpenVPN 3 GUI",
-            subtitle="Independent Linux client",
+            subtitle="OpenVPN 3 Linux client",
             show_close_button=True,
         )
+        self.sidebar_toggle = Gtk.ToggleButton()
+        self.sidebar_toggle.set_image(
+            Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.BUTTON)
+        )
+        self.sidebar_toggle.set_active(True)
+        self.sidebar_toggle.set_tooltip_text("Show or hide navigation")
+        self.sidebar_toggle.get_accessible().set_name("Show navigation")
+        header.pack_start(self.sidebar_toggle)
         self.refresh_button = button("Refresh", lambda *_: self.refresh())
         self.refresh_button.set_image(
             Gtk.Image.new_from_icon_name("view-refresh-symbolic", Gtk.IconSize.BUTTON)
@@ -92,7 +105,6 @@ class MainWindow(Gtk.ApplicationWindow):
         brand_name.pack_start(label("COMMUNITY GUI", "brand-caption"), False, False, 0)
         brand.pack_start(brand_name, False, False, 0)
         sidebar.pack_start(brand, False, False, 0)
-        sidebar.pack_start(label("YOUR WORKSPACE", "sidebar-note"), False, False, 6)
         self.navigation = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
         for text, page in (
             ("My VPNs", "profiles"),
@@ -116,14 +128,36 @@ class MainWindow(Gtk.ApplicationWindow):
         self.navigation.connect("row-selected", self.navigate)
         sidebar.pack_start(self.navigation, True, True, 0)
         sidebar.pack_end(
-            label(
-                f"LOCAL DESKTOP CLIENT\nv{__version__} · MIT License", "sidebar-note"
-            ),
+            label(f"OpenVPN 3 Linux client\nv{__version__}", "sidebar-note"),
             False,
             False,
             8,
         )
-        layout.pack_start(sidebar, False, False, 0)
+        appearance_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        appearance_box.pack_start(label("Appearance", "sidebar-note"), False, False, 0)
+        self.appearance_combo = Gtk.ComboBoxText()
+        for mode, title in (
+            ("system", "System default"),
+            ("light", "Light"),
+            ("dark", "Dark"),
+        ):
+            self.appearance_combo.append(mode, title)
+        self.appearance_combo.set_active_id(app.appearance.mode)
+        self.appearance_combo.get_accessible().set_name("Appearance")
+        self.appearance_combo.connect("changed", self.change_appearance)
+        appearance_box.pack_start(self.appearance_combo, False, False, 0)
+        sidebar.pack_end(appearance_box, False, False, 0)
+        self.sidebar_revealer = Gtk.Revealer(
+            transition_type=Gtk.RevealerTransitionType.SLIDE_RIGHT,
+            transition_duration=150,
+        )
+        self.sidebar_revealer.add(sidebar)
+        self.sidebar_revealer.set_reveal_child(True)
+        self.sidebar_toggle.connect(
+            "toggled",
+            lambda toggle: self.sidebar_revealer.set_reveal_child(toggle.get_active()),
+        )
+        layout.pack_start(self.sidebar_revealer, False, False, 0)
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         body.set_border_width(24)
         layout.pack_start(body, True, True, 0)
@@ -159,6 +193,97 @@ class MainWindow(Gtk.ApplicationWindow):
         self.load_commands()
         self.refresh()
         self.poll_id = GLib.timeout_add_seconds(5, self.poll)
+        self.traffic_poll_id = GLib.timeout_add(2000, self.poll_traffic)
+
+    def change_appearance(self, combo):
+        try:
+            self.get_application().appearance.set_mode(combo.get_active_id())
+        except OSError as error:
+            self.show_error(
+                "Appearance changed, but the preference could not be saved: "
+                + str(error)
+            )
+
+    def poll_traffic(self):
+        if self.closed:
+            return False
+        self.render_traffic()
+        session = self.selected_session
+        if self.traffic_inflight or self.busy or not session or self.session_error:
+            return True
+        if connection_status([session]) != "Connected":
+            record = self.traffic_records.get(session["path"])
+            if record:
+                record[1].interrupt()
+            return True
+        path, key = session["path"], self.selected_key
+        self.traffic_inflight = True
+
+        def finished(counters=None, error=None):
+            self.traffic_inflight = False
+            if not any(s["path"] == path for s in self.sessions) or self.busy:
+                return
+            previous = self.traffic_records.get(path)
+            history = previous[1] if previous else TrafficHistory()
+            if error:
+                history.interrupt()
+            else:
+                history.add(time.monotonic(), counters)
+            self.traffic_records[path] = (key, history, error)
+            self.traffic_records.move_to_end(path)
+            while len(self.traffic_records) > 32:
+                self.traffic_records.popitem(last=False)
+            self.render_traffic()
+
+        self.background(
+            lambda: self.backend.session_stats(path),
+            finished,
+            lambda error: finished(error=error),
+        )
+        return True
+
+    def render_traffic(self):
+        if not hasattr(self, "traffic_panel"):
+            return
+        session = self.selected_session
+        record = (
+            self.traffic_records.get(session["path"])
+            if session
+            else next(
+                (
+                    r
+                    for r in reversed(list(self.traffic_records.values()))
+                    if r[0] == self.selected_key
+                ),
+                None,
+            )
+        )
+        history = record[1] if record else None
+        error = record[2] if record else None
+        live = False
+        if self.session_error:
+            state = "Traffic unavailable · check VPN services."
+        elif not session:
+            state = (
+                "Last recorded before disconnect · not final totals."
+                if history and history.totals
+                else "Connect to see live traffic."
+            )
+        elif connection_status([session]) != "Connected":
+            state = "Traffic paused · waiting for a connected session."
+        elif error:
+            state = "Traffic unavailable · retrying automatically."
+        elif not history or not history.totals:
+            state = "Collecting traffic samples…"
+        elif time.monotonic() - history.updated > 8:
+            state = "Traffic update delayed · showing last totals."
+        else:
+            state = (
+                "Demo traffic · " if self.backend.demo else "Live · "
+            ) + "updates every 2 seconds"
+            live = True
+        self.traffic_panel.update(history, state, live)
+        self.traffic_panel.note.set_tooltip_text(error)
 
     def background(self, work, done, failed=None):
         future = self.executor.submit(work)
@@ -374,13 +499,10 @@ class MainWindow(Gtk.ApplicationWindow):
         details.pack_start(self.session_picker, False, False, 0)
         actions = Gtk.Box(spacing=8)
         self.pause_button = button("Pause", self.toggle_pause)
-        self.stats_button = button(
-            "Statistics", lambda *_: self.session_command("session-stats", run=True)
-        )
         self.logs_button = button(
             "Logs", lambda *_: self.session_command("log", run=True)
         )
-        for control in (self.pause_button, self.stats_button, self.logs_button):
+        for control in (self.pause_button, self.logs_button):
             actions.pack_start(control, False, False, 0)
         more = Gtk.MenuButton(label="More ▾")
         self.more_button = more
@@ -388,8 +510,13 @@ class MainWindow(Gtk.ApplicationWindow):
         options = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         options.set_border_width(10)
         self.profile_buttons = []
-        self.session_buttons = [self.pause_button, self.stats_button, self.logs_button]
+        self.session_buttons = [self.pause_button, self.logs_button]
         for title, callback, category in (
+            (
+                "Raw statistics",
+                lambda *_: self.session_command("session-stats", run=True),
+                "session",
+            ),
             ("Rename profile", self.rename_profile, "profile"),
             (
                 "Profile settings",
@@ -442,6 +569,9 @@ class MainWindow(Gtk.ApplicationWindow):
         more.set_popover(menu)
         actions.pack_end(more, False, False, 0)
         details.pack_start(actions, False, False, 0)
+        self.traffic_panel = TrafficPanel(self.get_application().appearance)
+        details.pack_start(Gtk.Separator(), False, False, 4)
+        details.pack_start(self.traffic_panel, False, False, 0)
         technical = Gtk.Expander(label="Profile & connection details")
         technical_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.profile_path = label("", "muted")
@@ -509,6 +639,10 @@ class MainWindow(Gtk.ApplicationWindow):
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
         content.get_style_context().add_class("card")
         for heading, body in (
+            (
+                "MIT License",
+                "Copyright © 2026 Mehadi Hasan Shuvo. This app is free and open source under the MIT License. The full license is included with the source and installed package.",
+            ),
             (
                 "An independent community app",
                 "OpenVPN 3 GUI is an independent Linux companion, not OpenVPN Connect. It is not affiliated with or endorsed by OpenVPN Inc. OpenVPN is a registered trademark of OpenVPN Inc.",
@@ -770,6 +904,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def update_actions(self):
         if not hasattr(self, "primary_button"):
             return
+        self.render_traffic()
         profile, session = self.selected_profile, self.selected_session
         available = bool(self.commands) and not self.busy
         self.primary_button.set_label(
@@ -1192,6 +1327,7 @@ class MainWindow(Gtk.ApplicationWindow):
     def on_destroy(self, *_):
         self.closed = True
         GLib.source_remove(self.poll_id)
+        GLib.source_remove(self.traffic_poll_id)
         self.executor.shutdown(wait=False, cancel_futures=True)
 
 
@@ -1202,22 +1338,22 @@ class Application(Gtk.Application):
             flags=Gio.ApplicationFlags.FLAGS_NONE,
         )
         self.demo = demo
+        self.appearance = None
+
+    def do_shutdown(self):
+        if self.appearance:
+            self.appearance.close()
+        Gtk.Application.do_shutdown(self)
 
     def do_activate(self):
         window = self.get_active_window()
         if window:
             window.present()
             return
-        # Use a consistent dark base for dialogs, menus and native controls too.
-        settings = Gtk.Settings.get_default()
-        settings.set_property("gtk-theme-name", "Adwaita")
-        settings.set_property("gtk-application-prefer-dark-theme", True)
+        if self.appearance is None:
+            self.appearance = Appearance(persist=not self.demo)
+        self.appearance.persist = not self.demo
         Gtk.Window.set_default_icon_from_file(str(application_icon_path()))
-        provider = Gtk.CssProvider()
-        provider.load_from_data(CSS)
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
         try:
             backend = Backend(self.demo)
         except CLIError as error:

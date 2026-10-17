@@ -6,13 +6,19 @@ import sys
 import tempfile
 import time
 import traceback
-
-import cairo
+import math
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from openvpn3_gui.app import Application, MainWindow
-from gi.repository import GLib, Gtk
+from openvpn3_gui.traffic import TrafficHistory
+from gi.repository import Gdk, GLib, Gtk
+
+# Keep the pointer away from the demo controls in Xvfb so tooltips cannot
+# obscure the mapped-window captures. No production desktop setting is changed.
+display = Gdk.Display.get_default()
+if display and "X11" in type(display).__name__:
+    display.get_default_seat().get_pointer().warp(Gdk.Screen.get_default(), 0, 0)
 
 OUTPUT = ROOT / "docs/screenshots"
 OUTPUT.mkdir(parents=True, exist_ok=True)
@@ -25,11 +31,17 @@ sample.write_text("# Demo only\nclient\ndev tun\nremote vpn.example.invalid 1194
 
 
 def capture(widget, name):
-    surface = cairo.ImageSurface(
-        cairo.FORMAT_ARGB32, widget.get_allocated_width(), widget.get_allocated_height()
+    # Capture the mapped window so native TreeView headers and controls appear.
+    pixbuf = Gdk.pixbuf_get_from_window(
+        widget.get_window(),
+        0,
+        0,
+        widget.get_allocated_width(),
+        widget.get_allocated_height(),
     )
-    widget.draw(cairo.Context(surface))
-    surface.write_to_png(str(OUTPUT / name))
+    if pixbuf is None:
+        raise RuntimeError("Could not capture the mapped demo window")
+    pixbuf.savev(str(OUTPUT / name), "png", [], [])
 
 
 def children(widget):
@@ -73,11 +85,40 @@ def tick():
         if step == 0:
             # Illustrative names; changes are only in the in-memory demo backend.
             window.backend._demo_profiles[1]["name"] = "Development"
-            window.resize(1240, 820)
+            window.resize(1240, 960)
+            window.appearance_combo.set_active_id("dark")
+            # Seed an explicitly demo-only minute so exported charts are useful.
+            history = TrafficHistory()
+            now = time.monotonic()
+            received, sent = 12000000, 2000000
+            for index in range(31):
+                received += int(280000 + 190000 * math.sin(index / 3))
+                sent += int(60000 + 35000 * math.cos(index / 4))
+                history.add(now - 60 + index * 2, (received, sent))
+            session = window.selected_session
+            window.backend._demo_traffic[session["path"]] = (now, received, sent)
+            window.traffic_records[session["path"]] = (
+                window.selected_key,
+                history,
+                None,
+            )
+            window.render_traffic()
             window.refresh()
             state["step"] = 1
         elif step == 1:
             capture(window, "dashboard.png")
+            window.appearance_combo.set_active_id("light")
+            state["step"] = 10
+        elif step == 10:
+            capture(window, "dashboard-light.png")
+            window.sidebar_toggle.set_active(False)
+            window.resize(960, 960)
+            state["step"] = 11
+        elif step == 11:
+            capture(window, "sidebar-collapsed.png")
+            window.sidebar_toggle.set_active(True)
+            window.resize(1240, 960)
+            window.appearance_combo.set_active_id("dark")
             window.open_command(
                 "config-manage",
                 {
@@ -100,7 +141,7 @@ def tick():
             window.primary_action()
             state["step"] = 4
         elif step == 4 and not window.busy and not window.refreshing:
-            window.resize(1240, 1020)
+            window.resize(1240, 1180)
             window.activity.set_expanded(True)
             state["step"] = 5
         elif step == 5:
@@ -109,13 +150,14 @@ def tick():
             window.backend._demo_profiles[0][
                 "name"
             ] = "/home/demo/Downloads/OpenVPN/Office_VPN_server_example_user.ovpn"
-            window.resize(1240, 820)
+            window.notice.set_reveal_child(False)
+            window.resize(1240, 1020)
             window.refresh()
             state["step"] = 6
         elif step == 6:
             window.dashboard_scroll.get_vadjustment().set_value(0)
             capture(window, "long-name-1240.png")
-            window.resize(960, 1120)
+            window.resize(960, 1280)
             state["step"] = 7
         elif step == 7:
             capture(window, "long-name-960.png")
@@ -137,6 +179,6 @@ app.run([sys.argv[0]])
 sample_directory.cleanup()
 if state["ok"]:
     print(
-        "Captured dashboard, import, advanced options, disconnect, and long-name wide/compact layouts using demo data."
+        "Captured dark/light dashboards, collapsed sidebar, import, advanced options, disconnect, and long-name layouts using demo data."
     )
 sys.exit(0 if state["ok"] else 1)

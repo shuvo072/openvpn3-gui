@@ -49,6 +49,7 @@ def tick():
         return True
     width, name = cases[state["index"]]
     if not state["prepared"]:
+        window.appearance_combo.set_active_id("dark" if state["index"] % 2 else "light")
         window.backend._demo_profiles[0]["name"] = name
         window.backend._demo_profiles[0]["acl"] = {"owner": "long-owner-" * 30}
         window.resize(width, 680 if width == 960 else 820)
@@ -102,7 +103,8 @@ def tick():
         window.profile_meta,
         window.primary_button,
         window.pause_button,
-        window.stats_button,
+        window.traffic_panel,
+        window.traffic_panel.graph,
         window.logs_button,
         window.more_button,
     ]:

@@ -9,6 +9,7 @@ cd "$PROJECT_DIR"
 /usr/bin/python3 scripts/ux-smoke.py
 /usr/bin/python3 scripts/resilience-smoke.py
 /usr/bin/python3 scripts/layout-smoke.py
+/usr/bin/python3 scripts/appearance-traffic-smoke.py
 desktop-file-validate packaging/openvpn3-gui.desktop
 shellcheck scripts/build-deb.sh scripts/install-deb.sh scripts/check.sh
 ./scripts/build-deb.sh
