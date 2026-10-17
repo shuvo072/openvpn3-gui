@@ -56,3 +56,67 @@ separator { background: #353e57; min-height: 1px; }
 popover, menu { background: #191e32; color: #edf0f7; }
 textview text { background: #141a2d; color: #edf0f7; }
 """
+
+# Both palettes share sizing and layout. Semantic replacements keep every
+# surface (including dialogs and generated command forms) in the chosen mode.
+LIGHT_COLORS = {
+    "#101325": "#f5f6fa",
+    "#edf0f7": "#243047",
+    "#2b3148": "#dce1eb",
+    "#aeb8ce": "#56627a",
+    "#0c1020": "#eef1f7",
+    "#b7c0d5": "#53617a",
+    "#1d243b": "#e1e6f0",
+    "#2c2630": "#fff0e2",
+    "#ffb574": "#934000",
+    "#ffffff": "#17243b",
+    "#191e32": "#ffffff",
+    "#3a435e": "#d7deeb",
+    "#39b78f": "#138364",
+    "#30394f": "#dce2ee",
+    "#252d47": "#eef1f8",
+    "#2e354c": "#edf0f5",
+    "#d0d8e9": "#526078",
+    "#163c34": "#e1f5ec",
+    "#8ce6c3": "#146448",
+    "#493524": "#fff0da",
+    "#ffca8d": "#80500a",
+    "#4b2933": "#fbe8ed",
+    "#ffbec8": "#9a2942",
+    "#d4ddf1": "#354661",
+    "#232b43": "#edf1f8",
+    "#29324b": "#f1f4fa",
+    "#4b5774": "#bac5d8",
+    "#36425e": "#e6ebf5",
+    "#8392b1": "#8695b0",
+    "#20273b": "#f3f4f7",
+    "#8b97b0": "#757f90",
+    "#36405a": "#dce1e9",
+    "#443528": "#f5e6d9",
+    "#bca58e": "#8c7664",
+    "#594633": "#e6cdb8",
+    "#3d4966": "#e5eaf4",
+    "#586887": "#b2bfd3",
+    "#4b5a7b": "#d9e1ef",
+    "#8294b8": "#899bb9",
+    "#9c5668": "#d79aaa",
+    "#3b2d25": "#fff0e2",
+    "#ffbd85": "#934000",
+    "#141a2d": "#ffffff",
+    "#c4cee4": "#53617a",
+    "#353e57": "#dce2ee",
+}
+
+
+def css_for(dark):
+    import re
+
+    css = CSS.decode()
+    if not dark:
+        css = re.sub(
+            r"#[0-9a-f]{6}", lambda match: LIGHT_COLORS.get(match[0], match[0]), css
+        )
+    css += "\n.traffic-value { font-size: 20px; font-weight: bold; }\n"
+    css += ".traffic-received { color: " + ("#70dfc0" if dark else "#08785f") + "; }\n"
+    css += ".traffic-sent { color: " + ("#ffb574" if dark else "#a64900") + "; }\n"
+    return css.encode()

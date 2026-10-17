@@ -1,4 +1,4 @@
-.TH OPENVPN3-GUI 1 "October 2026" "OpenVPN 3 GUI 0.3.2" "User Commands"
+.TH OPENVPN3-GUI 1 "October 2026" "OpenVPN 3 GUI 0.4.0" "User Commands"
 .SH NAME
 openvpn3-gui \- desktop interface for OpenVPN 3 Linux
 .SH SYNOPSIS
@@ -25,3 +25,14 @@ keys and are saved with owner-only permissions.
 .BR openvpn3 (1),
 .BR openvpn3-config-import (1),
 .BR openvpn3-session-start (1)
+
+.SH APPEARANCE AND TRAFFIC
+Use the header menu button to hide or show navigation. Appearance defaults to
+System, following the desktop preference. Light and Dark overrides are saved in
+$XDG_CONFIG_HOME/openvpn3-gui/preferences.json (normally ~/.config).
+Demo mode does not persist appearance settings.
+.PP
+The connection card samples transport bytes for the selected connected session
+approximately every two seconds and plots the last 60 seconds. Counters include
+VPN overhead. Traffic history stays in memory. After disconnect, the card shows
+the last recorded snapshot; final CLI statistics are in Last action details.

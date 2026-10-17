@@ -16,11 +16,13 @@ This is an independent community project, not OpenVPN Connect, and is not affili
 
 *Screenshots use isolated demo data. No real profiles, credentials, or server addresses are shown.*
 
-The dark navy interface and orange accents take visual cues from [OpenVPN Connect](https://openvpn.net/client/) and the [published OpenVPN palette](https://openvpn.net/branding/). The shield-and-lock artwork is this project's own icon. Official OpenVPN/Connect logos are not bundled: [OpenVPN's trademark policy](https://openvpn.net/legal/) requires prior written consent for their use. OpenVPN is a registered trademark of OpenVPN Inc. The app uses Inter when installed, with a system sans-serif fallback.
+The light and dark interfaces with orange accents take visual cues from [OpenVPN Connect](https://openvpn.net/client/) and the [published OpenVPN palette](https://openvpn.net/branding/). The shield-and-lock artwork is this project's own icon. Official OpenVPN/Connect logos are not bundled: [OpenVPN's trademark policy](https://openvpn.net/legal/) requires prior written consent for their use. OpenVPN is a registered trademark of OpenVPN Inc. The app uses Inter when installed, with a system sans-serif fallback.
 
 ## What it does
 
 - **One workspace:** saved profiles and active sessions appear together, with Connect/Disconnect, Pause/Resume, statistics, and logs.
+- **Live traffic:** received/sent speeds, session totals, and a 60-second chart directly in the connection card.
+- **Your preferred appearance:** follows the desktop by default; choose Light or Dark in the collapsible sidebar.
 - **Quiet routine actions:** disconnect and other everyday changes finish inline. Successful authentication windows close automatically; errors stay available.
 - **Duplicate names handled correctly:** actions use exact D-Bus identifiers. A running connection stays associated with its profile even after a rename.
 - **Full CLI access:** commands, aliases, values, and descriptions are discovered from your installed `openvpn3 --help`. OpenVPN 3 v27.1 exposes 16 commands and 115 command options.
@@ -38,7 +40,7 @@ For real connections, install **OpenVPN 3 Linux** using the [official OpenVPN in
 Install the desktop libraries:
 
 ```sh
-sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-vte-2.91 adwaita-icon-theme librsvg2-common
+sudo apt install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-vte-2.91 adwaita-icon-theme librsvg2-common
 ```
 
 ### 2. Run from source
@@ -73,7 +75,7 @@ Run this as your normal user. The build runs without root; the installer request
 To build without installing, use `make deb`. To install an already built or downloaded package from this checkout:
 
 ```sh
-./scripts/install-deb.sh ./dist/openvpn3-gui_0.3.2_all.deb
+./scripts/install-deb.sh ./dist/openvpn3-gui_0.4.0_all.deb
 ```
 
 Launch **OpenVPN 3 GUI** from your application menu or run `openvpn3-gui`.
@@ -88,12 +90,12 @@ Removing the GUI leaves OpenVPN's imported profiles and connections intact.
 
 ### Share the `.deb` with users
 
-The distributable package is **`dist/openvpn3-gui_0.3.2_all.deb`**. It installs the application, desktop launcher, icon, manual, and documentation into standard system locations. Recipients do not need this source checkout, Python development tools, or `make`. APT resolves the declared runtime dependencies; recipients must first configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) for their supported distribution if OpenVPN 3 is not already installed.
+The distributable package is **`dist/openvpn3-gui_0.4.0_all.deb`**. It installs the application, desktop launcher, icon, manual, and documentation into standard system locations. Recipients do not need this source checkout, Python development tools, or `make`. APT resolves the declared runtime dependencies; recipients must first configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) for their supported distribution if OpenVPN 3 is not already installed.
 
 Users can open the `.deb` with their desktop's package installer, if available. For terminal installation, distribute the optional **`dist/install-openvpn3-gui.sh`** alongside it. From the directory containing both downloaded files:
 
 ```sh
-sh ./install-openvpn3-gui.sh ./openvpn3-gui_0.3.2_all.deb
+sh ./install-openvpn3-gui.sh ./openvpn3-gui_0.4.0_all.deb
 ```
 
 The helper works without the source checkout and stages the package for APT's sandbox. The `.deb` cannot control permissions on the directory it is downloaded into: a direct `sudo apt install ./package.deb` from a private home directory can still print the `_apt` notice. Neither installation method downloads or runs an unverified bootstrap script or changes home-directory permissions.
@@ -101,6 +103,18 @@ The helper works without the source checkout and stages the package for APT's sa
 The build also writes `dist/SHA256SUMS` for the package and helper. Distribute it with the two files; recipients can run `sha256sum --check SHA256SUMS` to check download integrity. These checksums are not a publisher signature.
 
 ## Everyday use
+
+### Appearance and navigation
+
+Use the **☰** button at the top left to hide or show navigation. Hiding it gives the connection panel more space. The footer identifies the app as an **OpenVPN 3 Linux client**; licensing information is in **About & help**.
+
+**Appearance → System default** follows your desktop's light/dark preference, including changes while the app is open. You can also select **Light** or **Dark**. The app uses the desktop settings portal, with GNOME/GTK settings as a fallback; it does not change your desktop theme. If your desktop does not expose a preference, choose a mode manually.
+
+Only the appearance choice is saved, in `$XDG_CONFIG_HOME/openvpn3-gui/preferences.json` (normally `~/.config/openvpn3-gui/preferences.json`). Demo mode does not read or write this preference. Remove the file to restore System default.
+
+![Light theme with inline connection traffic](docs/screenshots/dashboard-light.png)
+
+![Navigation hidden to give the VPN dashboard more space](docs/screenshots/sidebar-collapsed.png)
 
 ### Import a profile
 
@@ -117,7 +131,15 @@ Choose **Import profile**, select your `.ovpn` file, and give it a friendly name
 
 The app refreshes automatically every five seconds and after actions finish. If a profile has multiple sessions, choose the exact connection from its selector. Sessions whose profiles are unavailable remain manageable as separate rows.
 
-Disconnect statistics remain under **Last action details**:
+### Read connection traffic
+
+The connection card shows **Received** and **Sent** speeds, total transferred bytes, and a graph of the last 60 seconds. It samples the selected connected session about every two seconds, using its exact ID. The solid teal line is received traffic; the dashed orange line is sent traffic. Speeds need two samples before appearing.
+
+Totals are OpenVPN's TCP/UDP transport counters (`BYTES_IN` / `BYTES_OUT`), including VPN overhead, and cover the session even if it started before the GUI. The graph only covers samples collected while that session is selected. Units are bytes (KiB = 1,024 bytes), not bits. See the [upstream counter definitions](https://github.com/OpenVPN/openvpn3-linux/blob/master/docs/dbus/dbus-service-net.openvpn.v3.client.md#dictionary-statistics).
+
+Pauses, delayed reads, and errors are labelled; missing readings do not become zero-speed measurements. Counter resets start a fresh speed baseline. Traffic history stays in memory and is discarded when the app closes. After disconnect, the card retains a clearly labelled **last recorded** snapshot; the CLI's final disconnect statistics remain under **Last action details**. **More → Raw statistics** opens all counters when needed.
+
+Disconnect details:
 
 ![A disconnected VPN with its most recent action and traffic statistics expanded](docs/screenshots/disconnect-details.png)
 
@@ -125,7 +147,7 @@ Disconnect statistics remain under **Last action details**:
 
 ### Manage profiles and connections
 
-**More** contains rename, profile settings, access permissions, export, deletion, restart, authentication requests, and stale-session cleanup. **Profile & connection details** shows the full identifiers and service-reported information.
+**More** contains raw statistics, rename, profile settings, access permissions, export, deletion, restart, authentication requests, and stale-session cleanup. **Profile & connection details** shows the full identifiers and service-reported information.
 
 Configuration exports use owner-only file permissions (`0600`). Exports can contain private keys; store them in a location you trust. Deleting an imported profile does not delete the original `.ovpn` file. Deletion and permanent sealing require confirmation.
 
@@ -161,8 +183,8 @@ Status is expressed in text as well as color. Cards switch from side by side to 
 ## Requirements and compatibility
 
 - Debian or Ubuntu desktop with a working graphical session and system D-Bus.
-- Python 3.9+, PyGObject, GTK 3, and VTE 2.91.
-- OpenVPN 3 Linux with `configs-list --json` for real profile management.
+- Python 3.9+, PyGObject, GTK 3, Pycairo/GI Cairo, and VTE 2.91.
+- OpenVPN 3 Linux with `configs-list --json` for profile management and `session-stats --json` for live traffic.
 
 The `.deb` contains architecture-independent Python code; OpenVPN and distribution packages determine the supported CPU architectures. Development uses OpenVPN 3 Linux v27.1. [Test results and their limits](docs/TESTING.md) distinguish desktop simulation, installed-CLI checks, and real VPN/server testing.
 
@@ -172,6 +194,7 @@ The `.deb` contains architecture-independent Python code; OpenVPN and distributi
 | --- | --- |
 | OpenVPN is not installed | Use the setup screen's official installation link, then **Check again**. **Explore demo** works without OpenVPN. |
 | Profile/session service unavailable | Confirm `openvpn3 configs-list --json` and `openvpn3 sessions-list` work as your desktop user, then choose **Refresh**. |
+| Live traffic unavailable | The app retries automatically. Check **More → Raw statistics** for CLI diagnostics and whether your installed CLI supports `session-stats --json`. |
 | Authentication fails | Read the error in the command window. Check the username, password/OTP, and server requirements. |
 | An action times out | Refresh before retrying: the service may already have applied it. Diagnostics remain available. |
 | The desktop cannot open | Launch from a graphical desktop session, using the system Python through `./openvpn3-gui`. |

@@ -1,6 +1,6 @@
 # Verification report
 
-Version: **0.3.2**
+Version: **0.4.0**
 
 Date: **2026-10-17**
 
@@ -16,7 +16,7 @@ Architecture tested: **x86-64**
 | Debian 12 container | 3.11 | Xvfb/D-Bus session, offline demo, backend tests, package checks | Passed |
 | Debian 13 container | 3.13 | Xvfb/D-Bus session, offline demo, backend tests, package checks | Passed |
 
-The local suite has **23 backend tests**, including installed-CLI coverage, plus **4 release-metadata tests** added on 2026-10-17. Containers run **22 backend tests** and the release tests, explicitly skipping the installed-CLI test because OpenVPN is absent. Each container also runs four GTK/VTE test suites and the package checks below. Host desktop flows and the real-service profile lifecycle were additionally verified for 0.3.0; the four-container desktop matrix was rerun for the 0.3.2 theme update.
+The local suite has **36 tests**: 23 backend/capability checks, 6 traffic-model tests, 3 appearance/preference tests, and 4 release-metadata tests. Containers run 35 tests and explicitly skip the installed-CLI test because OpenVPN is absent. Each container also runs five GTK/VTE suites and the package checks below. The four-container matrix was rerun for 0.4.0. Host desktop flows and the real-service profile lifecycle were additionally verified for 0.3.0.
 
 These container runs validate the application with each distribution's Python/GTK/VTE packages. They do not establish a real VPN or prove that OpenVPN's repository supports every OS/CPU combination. The table records local checks; current hosted runs are available in [GitHub Actions](https://github.com/shuvo072/openvpn3-gui/actions). The release workflow reruns the full matrix before publishing a version tag.
 
@@ -33,9 +33,12 @@ These container runs validate the application with each distribution's Python/GT
 - Subprocess timeout reporting without leaking secret arguments.
 - Compact window layout, missing-CLI setup, and offline demo operation without an OpenVPN installation.
 - Actual widget allocations for long paths, unbroken names, and multilingual names at 960, 1120, 1240, and 1600 logical pixels wide; no horizontal page overflow; visible action buttons; expanded metadata; full-name tooltips; and repeated transitions between stacked and side-by-side layouts.
-- Additional Ubuntu 24.04 layout passes with `GDK_DPI_SCALE=1.25`, `GDK_DPI_SCALE=1.5`, and `GDK_SCALE=2`. The 2× pass also exercises the 960 × 680 minimum window size.
+- Earlier 0.3.2 Ubuntu 24.04 layout passes with `GDK_DPI_SCALE=1.25`, `GDK_DPI_SCALE=1.5`, and `GDK_SCALE=2`. The 2× pass also exercises the 960 × 680 minimum window size.
 - Python compilation, ShellCheck, and desktop-entry validation.
-- 0.3.2 dark-theme screenshots visually reviewed for the dashboard, import dialog, advanced forms, long names, and compact layout; the packaged app icon is compared with the project SVG.
+- 0.4.0 light/dark dashboards, hidden sidebar, import dialog, advanced forms, disconnect details, and long-name layouts captured from mapped GTK windows using demo data and visually reviewed. The packaged app icon is compared with the project SVG.
+- System appearance through a simulated Settings portal on an isolated D-Bus session, including the older nested-variant Read reply and live SettingChanged signals; explicit light/dark overrides, safe preference defaults, and saved preference permissions.
+- Exact-session statistics arguments, malformed/missing counters, integer limits, elapsed-time rate calculation, counter resets, gaps, bounded history, and byte-unit formatting.
+- Live GTK counters, non-overlapping polls, selection changes during a read, disconnect before a response, unavailable statistics, recovery, and a fresh rate baseline after errors. Solid/dashed chart lines distinguish directions in addition to color.
 - Extracted package launcher, version/help output, offline catalog, MIT license, file permissions, manifest checksums, exclusion of VPN/key files, and repeat-build SHA-256 equality.
 - Installer staging from private directories and filenames containing spaces; readable package-copy permissions without changing source permissions; sudo/root invocation; failure/cancellation exit status; cleanup; invalid-input rejection. These regression checks substitute APT and sudo and do not install system packages.
 
@@ -49,7 +52,7 @@ The standalone installation helper was also exercised without the source checkou
 
 ## Limits
 
-A real VPN-server connection was not exercised. Server-specific password/OTP/web authentication, certificate validation, routes, DNS behavior, reconnect after network changes, and DCO require end-to-end testing with a suitable test VPN. The simulated password flow validates the terminal integration, not every server authentication scheme.
+A real VPN-server connection was not exercised. Live traffic is validated against simulated counters and the upstream JSON schema; a live-server throughput comparison was not performed. System appearance is tested with a simulated portal, not a full GNOME/KDE desktop settings matrix. Server-specific password/OTP/web authentication, certificate validation, routes, DNS behavior, reconnect after network changes, and DCO require end-to-end testing with a suitable test VPN. The simulated password flow validates the terminal integration, not every server authentication scheme.
 
 There has been no independent security audit, comprehensive screen-reader audit, ARM validation, or full desktop-environment matrix. The host desktop and Xvfb exercise different display paths, but they do not cover every compositor/theme combination.
 

@@ -37,7 +37,8 @@ The GitHub Actions check workflow runs these checks on four distribution images 
 - `openvpn3_gui/backend.py`: CLI discovery, subprocess execution, list parsing, exact session/profile association, private exports, and isolated demo state.
 - `openvpn3_gui/app.py`: main GTK screens and action coordination; service reads run in a bounded worker pool.
 - `openvpn3_gui/widgets.py`: command forms and VTE terminals for interactive prompts.
-- `openvpn3_gui/theme.py`: application styling.
+- `openvpn3_gui/theme.py`, `appearance.py`, `preferences.py`: palettes, system theme integration, and the local appearance preference.
+- `openvpn3_gui/traffic.py`, `traffic_widget.py`: counter validation, bounded sampling, and accessible traffic graphics.
 - `openvpn3_gui/data/demo-capabilities.json`: option names/argument shapes for the offline v27.1 demo. Real mode never uses this as a substitute for CLI discovery.
 - `scripts/`: test runners, screenshot capture, and package build/inspection.
 - `packaging/`: desktop entry, icon, Debian metadata, and manual page.
@@ -65,7 +66,7 @@ make deb
 /usr/bin/python3 scripts/installer-check.py
 ```
 
-Screenshots are drawn from real GTK windows using only demo data. Review them after layout changes. The build includes the README, documentation, screenshots, license, desktop files, and demo catalog.
+Screenshots are captured from mapped GTK windows using only demo data. Review them after layout changes. The build includes the README, documentation, screenshots, license, desktop files, and demo catalog.
 
 Build artifacts include the `.deb`, a standalone `install-openvpn3-gui.sh` helper, and `SHA256SUMS`. Test the helper from a directory without the source checkout. Recipients still need access to OpenVPN's repository for its runtime dependency; do not claim that the package bundles OpenVPN or configures its repository.
 
@@ -77,13 +78,14 @@ Before announcing support for a new platform, record what was tested in `docs/TE
 
 ### Publish a GitHub release
 
-After updating the version files, committing the release, and checking the changes:
+Submit version changes on a branch and merge through a pull request after the required checks pass. Do not bypass the protection on `main`. After the release commit is merged:
 
 ```sh
-python3 scripts/release-check.py v0.3.1  # replace with the new version
-git push origin main
-git tag -a v0.3.1 -m "OpenVPN 3 GUI 0.3.1"
-git push origin v0.3.1
+git switch main
+git pull --ff-only origin main
+python3 scripts/release-check.py v0.4.0  # replace with the merged version
+git tag -a v0.4.0 -m "OpenVPN 3 GUI 0.4.0"
+git push origin v0.4.0
 ```
 
 Use a new `vMAJOR.MINOR.PATCH` tag for each release; never move an already published tag. The workflow rejects tags that disagree with the source version, Debian control file, newest changelog entry, manual, or README package filename. Prerelease tags are not supported yet.

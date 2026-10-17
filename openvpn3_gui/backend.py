@@ -8,6 +8,8 @@ import shlex
 import shutil
 import subprocess
 import tempfile
+import time
+import math
 from pathlib import Path
 
 
@@ -260,6 +262,7 @@ class Backend:
         self.demo = demo
         self._demo_sessions = None
         self._demo_profiles = None
+        self._demo_traffic = {}
         self.executable = shutil.which("openvpn3")
         if not self.executable and not demo:
             raise CLIError(
@@ -384,6 +387,27 @@ class Backend:
                 except GLib.Error:
                     pass
         return sessions
+
+    def session_stats(self, path):
+        """Read transport counters for one exact session, without a shell."""
+        from .traffic import parse_counters
+
+        if self.demo:
+            now = time.monotonic()
+            previous, received, sent = self._demo_traffic.get(
+                path, (now, 12582912, 2097152)
+            )
+            elapsed = max(0, now - previous)
+            received += int(elapsed * (90000 + 70000 * (1 + math.sin(now / 5))))
+            sent += int(elapsed * (18000 + 12000 * (1 + math.cos(now / 7))))
+            self._demo_traffic[path] = (now, received, sent)
+            return received, sent
+        try:
+            return parse_counters(self.read("session-stats", "--path", path, "--json"))
+        except ValueError as error:
+            raise CLIError(
+                "OpenVPN did not return usable traffic counters: " + str(error)
+            ) from error
 
     def execute(self, arguments):
         """Run a noninteractive action, capturing diagnostics in memory only."""
