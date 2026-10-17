@@ -8,11 +8,15 @@
 
 A GTK companion for OpenVPN 3 Linux on Debian and Ubuntu. Import a profile, connect, and manage the session from one screen. The full installed CLI remains available through graphical option forms.
 
+This is an independent community project, not OpenVPN Connect, and is not affiliated with or endorsed by OpenVPN Inc.
+
 [Download releases](https://github.com/shuvo072/openvpn3-gui/releases) · [Get started](#get-started) · [Screenshots](#everyday-use) · [Testing](docs/TESTING.md) · [Contributing](CONTRIBUTING.md) · [MIT license](LICENSE)
 
 ![My VPNs dashboard showing saved networks, live status, and connection controls](docs/screenshots/dashboard.png)
 
 *Screenshots use isolated demo data. No real profiles, credentials, or server addresses are shown.*
+
+The dark navy interface and orange accents take visual cues from [OpenVPN Connect](https://openvpn.net/client/) and the [published OpenVPN palette](https://openvpn.net/branding/). The shield-and-lock artwork is this project's own icon. Official OpenVPN/Connect logos are not bundled: [OpenVPN's trademark policy](https://openvpn.net/legal/) requires prior written consent for their use. OpenVPN is a registered trademark of OpenVPN Inc. The app uses Inter when installed, with a system sans-serif fallback.
 
 ## What it does
 
@@ -69,7 +73,7 @@ Run this as your normal user. The build runs without root; the installer request
 To build without installing, use `make deb`. To install an already built or downloaded package from this checkout:
 
 ```sh
-./scripts/install-deb.sh ./dist/openvpn3-gui_0.3.1_all.deb
+./scripts/install-deb.sh ./dist/openvpn3-gui_0.3.2_all.deb
 ```
 
 Launch **OpenVPN 3 GUI** from your application menu or run `openvpn3-gui`.
@@ -84,12 +88,12 @@ Removing the GUI leaves OpenVPN's imported profiles and connections intact.
 
 ### Share the `.deb` with users
 
-The distributable package is **`dist/openvpn3-gui_0.3.1_all.deb`**. It installs the application, desktop launcher, icon, manual, and documentation into standard system locations. Recipients do not need this source checkout, Python development tools, or `make`. APT resolves the declared runtime dependencies; recipients must first configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) for their supported distribution if OpenVPN 3 is not already installed.
+The distributable package is **`dist/openvpn3-gui_0.3.2_all.deb`**. It installs the application, desktop launcher, icon, manual, and documentation into standard system locations. Recipients do not need this source checkout, Python development tools, or `make`. APT resolves the declared runtime dependencies; recipients must first configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) for their supported distribution if OpenVPN 3 is not already installed.
 
 Users can open the `.deb` with their desktop's package installer, if available. For terminal installation, distribute the optional **`dist/install-openvpn3-gui.sh`** alongside it. From the directory containing both downloaded files:
 
 ```sh
-sh ./install-openvpn3-gui.sh ./openvpn3-gui_0.3.1_all.deb
+sh ./install-openvpn3-gui.sh ./openvpn3-gui_0.3.2_all.deb
 ```
 
 The helper works without the source checkout and stages the package for APT's sandbox. The `.deb` cannot control permissions on the directory it is downloaded into: a direct `sudo apt install ./package.deb` from a private home directory can still print the `_apt` notice. Neither installation method downloads or runs an unverified bootstrap script or changes home-directory permissions.
@@ -127,7 +131,9 @@ Configuration exports use owner-only file permissions (`0600`). Exports can cont
 
 ### Use advanced options
 
-Open **All CLI commands**, select a command, and enable the options you need. Search filters the available fields. **Repeat an option** supports repeated tags or access grants; **Reset options** clears the form. The command preview masks secret-valued fields.
+Open **Advanced tools**, select a command, and enable the options you need. Search filters the available fields. **Repeat an option** supports repeated tags or access grants; **Reset options** clears the form. The command preview masks secret-valued fields.
+
+This section is optional. Most users only need **My VPNs** to import, connect, and disconnect; Advanced tools exposes settings such as DNS, proxy configuration, access permissions, and diagnostics.
 
 ![Advanced command form filtered to DNS options, with an argument preview](docs/screenshots/advanced-options.png)
 

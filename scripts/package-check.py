@@ -59,6 +59,8 @@ with tempfile.TemporaryDirectory(prefix="openvpn3-package-check-") as temporary:
     assert "hasanshuvo.dev@gmail.com" in (stage / "DEBIAN/control").read_text()
     data = stage / "usr/share/openvpn3-gui/openvpn3_gui/data/demo-capabilities.json"
     assert data.is_file()
+    icon = stage / "usr/share/openvpn3-gui/openvpn3_gui/data/app-icon.svg"
+    assert icon.read_bytes() == (ROOT / "packaging/openvpn3-gui.svg").read_bytes()
     subprocess.run(["md5sum", "--quiet", "-c", "DEBIAN/md5sums"], cwd=stage, check=True)
     environment["PYTHONPATH"] = str(stage / "usr/share/openvpn3-gui")
     environment["PYTHONDONTWRITEBYTECODE"] = "1"

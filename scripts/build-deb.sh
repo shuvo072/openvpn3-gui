@@ -18,6 +18,7 @@ install -m 644 "$PROJECT_DIR"/openvpn3_gui/*.py "$STAGE_DIR/usr/share/openvpn3-g
 install -m 644 "$PROJECT_DIR"/openvpn3_gui/data/*.json "$STAGE_DIR/usr/share/openvpn3-gui/openvpn3_gui/data/"
 install -m 644 "$PROJECT_DIR/packaging/openvpn3-gui.desktop" "$STAGE_DIR/usr/share/applications/"
 install -m 644 "$PROJECT_DIR/packaging/openvpn3-gui.svg" "$STAGE_DIR/usr/share/icons/hicolor/scalable/apps/"
+install -m 644 "$PROJECT_DIR/packaging/openvpn3-gui.svg" "$STAGE_DIR/usr/share/openvpn3-gui/openvpn3_gui/data/app-icon.svg"
 install -m 644 "$PROJECT_DIR/README.md" "$STAGE_DIR/usr/share/doc/openvpn3-gui/"
 install -m 644 "$PROJECT_DIR/LICENSE" "$STAGE_DIR/usr/share/doc/openvpn3-gui/"
 install -m 644 "$PROJECT_DIR/CONTRIBUTING.md" "$PROJECT_DIR/SECURITY.md" "$STAGE_DIR/usr/share/doc/openvpn3-gui/"

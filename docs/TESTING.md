@@ -1,8 +1,8 @@
 # Verification report
 
-Version: **0.3.1**
+Version: **0.3.2**
 
-Date: **2026-10-15**
+Date: **2026-10-17**
 
 Architecture tested: **x86-64**
 
@@ -16,7 +16,7 @@ Architecture tested: **x86-64**
 | Debian 12 container | 3.11 | Xvfb/D-Bus session, offline demo, backend tests, package checks | Passed |
 | Debian 13 container | 3.13 | Xvfb/D-Bus session, offline demo, backend tests, package checks | Passed |
 
-The local suite has **23 backend tests**, including installed-CLI coverage, plus **4 release-metadata tests** added on 2026-10-17. Containers run **22 backend tests** and the release tests, explicitly skipping the installed-CLI test because OpenVPN is absent. Each container also runs four GTK/VTE test suites and the package checks below. Host desktop flows and the real-service profile lifecycle were additionally verified for 0.3.0; the four-container desktop matrix was rerun for 0.3.1.
+The local suite has **23 backend tests**, including installed-CLI coverage, plus **4 release-metadata tests** added on 2026-10-17. Containers run **22 backend tests** and the release tests, explicitly skipping the installed-CLI test because OpenVPN is absent. Each container also runs four GTK/VTE test suites and the package checks below. Host desktop flows and the real-service profile lifecycle were additionally verified for 0.3.0; the four-container desktop matrix was rerun for the 0.3.2 theme update.
 
 These container runs validate the application with each distribution's Python/GTK/VTE packages. They do not establish a real VPN or prove that OpenVPN's repository supports every OS/CPU combination. The table records local checks; current hosted runs are available in [GitHub Actions](https://github.com/shuvo072/openvpn3-gui/actions). The release workflow reruns the full matrix before publishing a version tag.
 
@@ -35,6 +35,7 @@ These container runs validate the application with each distribution's Python/GT
 - Actual widget allocations for long paths, unbroken names, and multilingual names at 960, 1120, 1240, and 1600 logical pixels wide; no horizontal page overflow; visible action buttons; expanded metadata; full-name tooltips; and repeated transitions between stacked and side-by-side layouts.
 - Additional Ubuntu 24.04 layout passes with `GDK_DPI_SCALE=1.25`, `GDK_DPI_SCALE=1.5`, and `GDK_SCALE=2`. The 2× pass also exercises the 960 × 680 minimum window size.
 - Python compilation, ShellCheck, and desktop-entry validation.
+- 0.3.2 dark-theme screenshots visually reviewed for the dashboard, import dialog, advanced forms, long names, and compact layout; the packaged app icon is compared with the project SVG.
 - Extracted package launcher, version/help output, offline catalog, MIT license, file permissions, manifest checksums, exclusion of VPN/key files, and repeat-build SHA-256 equality.
 - Installer staging from private directories and filenames containing spaces; readable package-copy permissions without changing source permissions; sudo/root invocation; failure/cancellation exit status; cleanup; invalid-input rejection. These regression checks substitute APT and sudo and do not install system packages.
 
@@ -42,7 +43,7 @@ The standalone installation helper was also exercised without the source checkou
 
 ## Real-service check
 
-`make integration` was run against the local OpenVPN 3 services for 0.3.0. It creates one randomly named, nonpersistent profile pointing to loopback, checks its exact ID, renames it, adds/removes a tag, reads its exported configuration and ACL, and removes it in a `finally` block. The 0.3.1 layout/packaging update does not change this backend behavior.
+`make integration` was run against the local OpenVPN 3 services for 0.3.0. It creates one randomly named, nonpersistent profile pointing to loopback, checks its exact ID, renames it, adds/removes a tag, reads its exported configuration and ACL, and removes it in a `finally` block. The later layout, packaging, and theme updates do not change this backend behavior.
 
 **No tunnel is started.** It does not use or modify an existing VPN profile, change routes/DNS, or require server credentials. This check is opt-in and is not part of the offline CI suite.
 

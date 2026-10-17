@@ -1,3 +1,12 @@
+openvpn3-gui (0.3.2) unstable; urgency=medium
+
+  * Add a Connect-inspired dark navy and orange desktop theme.
+  * Use the independent project icon consistently in the app and launcher.
+  * Clarify Advanced tools and independent community-app branding.
+  * Refresh screenshots and document the visual reference and logo policy.
+
+ -- Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>  Sat, 17 Oct 2026 12:00:00 +0600
+
 openvpn3-gui (0.3.1) unstable; urgency=medium
 
   * Fit long profile names and connection details within the content area.

@@ -7,7 +7,8 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
-from gi.repository import Gdk, Gio, GLib, Gtk, Pango
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango
 
 from . import __version__
 from .backend import (
@@ -21,6 +22,19 @@ from .widgets import CommandForm, CommandWindow, button, confirm, label, scrolle
 
 
 from .theme import CSS
+
+
+def application_icon_path():
+    source = Path(__file__).resolve().parent.parent / "packaging/openvpn3-gui.svg"
+    return source if source.is_file() else Path(__file__).parent / "data/app-icon.svg"
+
+
+def application_icon(size):
+    return Gtk.Image.new_from_pixbuf(
+        GdkPixbuf.Pixbuf.new_from_file_at_scale(
+            str(application_icon_path()), size, size, True
+        )
+    )
 
 
 class MainWindow(Gtk.ApplicationWindow):
@@ -51,7 +65,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.connect("delete-event", self.on_close)
         self.connect("key-press-event", self.on_shortcut)
         header = Gtk.HeaderBar(
-            title="OpenVPN 3 GUI", subtitle="Desktop companion", show_close_button=True
+            title="OpenVPN 3 GUI",
+            subtitle="Independent Linux client",
+            show_close_button=True,
         )
         self.refresh_button = button("Refresh", lambda *_: self.refresh())
         self.refresh_button.set_image(
@@ -69,18 +85,18 @@ class MainWindow(Gtk.ApplicationWindow):
         sidebar.set_size_request(190, -1)
         sidebar.get_style_context().add_class("sidebar")
         brand = Gtk.Box(spacing=10)
-        brand_icon = Gtk.Image.new_from_icon_name(
-            "network-vpn-symbolic", Gtk.IconSize.LARGE_TOOLBAR
-        )
-        brand_icon.get_style_context().add_class("brand-icon")
+        brand_icon = application_icon(40)
         brand.pack_start(brand_icon, False, False, 0)
-        brand.pack_start(label("OpenVPN 3", "brand"), False, False, 0)
+        brand_name = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        brand_name.pack_start(label("OpenVPN 3", "brand"), False, False, 0)
+        brand_name.pack_start(label("COMMUNITY GUI", "brand-caption"), False, False, 0)
+        brand.pack_start(brand_name, False, False, 0)
         sidebar.pack_start(brand, False, False, 0)
         sidebar.pack_start(label("YOUR WORKSPACE", "sidebar-note"), False, False, 6)
         self.navigation = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
         for text, page in (
             ("My VPNs", "profiles"),
-            ("All CLI commands", "commands"),
+            ("Advanced tools", "commands"),
             ("About & help", "about"),
         ):
             row = Gtk.ListBoxRow()
@@ -321,9 +337,8 @@ class MainWindow(Gtk.ApplicationWindow):
         network_list.pack_start(self.profile_empty, False, False, 0)
         details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         details.get_style_context().add_class("card")
-        self.connection_icon = Gtk.Image.new_from_icon_name(
-            "network-vpn-symbolic", Gtk.IconSize.DIALOG
-        )
+        self.connection_card = details
+        self.connection_icon = application_icon(36)
         self.connection_icon.set_halign(Gtk.Align.START)
         self.connection_icon.set_pixel_size(32)
         self.connection_icon.set_valign(Gtk.Align.START)
@@ -473,8 +488,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def make_commands(self):
         page = self.page(
-            "All CLI commands",
-            "Every command and option is read from your installed CLI. Enable options to include them; repeat options when needed.",
+            "Advanced tools",
+            "Optional settings and diagnostics for experienced users. For everyday connections, use My VPNs. All installed CLI commands are available here.",
         )
         self.command_combo = Gtk.ComboBoxText()
         for renderer in self.command_combo.get_cells():
@@ -495,6 +510,10 @@ class MainWindow(Gtk.ApplicationWindow):
         content.get_style_context().add_class("card")
         for heading, body in (
             (
+                "An independent community app",
+                "OpenVPN 3 GUI is an independent Linux companion, not OpenVPN Connect. It is not affiliated with or endorsed by OpenVPN Inc. OpenVPN is a registered trademark of OpenVPN Inc.",
+            ),
+            (
                 "Get connected",
                 "Import an .ovpn file, give it a friendly name, and keep “Remember after restart” enabled. Select the profile and choose Connect. Enter credentials in the command window when prompted.",
             ),
@@ -504,7 +523,7 @@ class MainWindow(Gtk.ApplicationWindow):
             ),
             (
                 "Full CLI access",
-                "All CLI commands includes configuration overrides, tags, ACLs, authentication requests, log levels, statistics, JSON output, and CLI helpers. Options and aliases follow the installed openvpn3 version. Other binaries such as openvpn3-admin are outside this interface.",
+                "Advanced tools includes configuration overrides, tags, ACLs, authentication requests, log levels, statistics, JSON output, and CLI helpers. Options and aliases follow the installed openvpn3 version. Other binaries such as openvpn3-admin are outside this interface.",
             ),
             (
                 "Authentication & privacy",
@@ -772,6 +791,16 @@ class MainWindow(Gtk.ApplicationWindow):
             if self.session_error
             else (connection_status([session]) if session else "Disconnected")
         )
+        card_context = self.connection_card.get_style_context()
+        primary_context = self.primary_button.get_style_context()
+        if status == "Connected":
+            card_context.add_class("connected")
+        else:
+            card_context.remove_class("connected")
+        if session:
+            primary_context.add_class("connection-active")
+        else:
+            primary_context.remove_class("connection-active")
         self.connection_label.set_text(status)
         context = self.connection_label.get_style_context()
         for state in ("online", "pending", "failed", "offline"):
@@ -1179,11 +1208,11 @@ class Application(Gtk.Application):
         if window:
             window.present()
             return
-        # A consistent light base avoids mixing the custom palette with a dark
-        # desktop theme (which can otherwise render white text on white rows).
+        # Use a consistent dark base for dialogs, menus and native controls too.
         settings = Gtk.Settings.get_default()
         settings.set_property("gtk-theme-name", "Adwaita")
-        settings.set_property("gtk-application-prefer-dark-theme", False)
+        settings.set_property("gtk-application-prefer-dark-theme", True)
+        Gtk.Window.set_default_icon_from_file(str(application_icon_path()))
         provider = Gtk.CssProvider()
         provider.load_from_data(CSS)
         Gtk.StyleContext.add_provider_for_screen(

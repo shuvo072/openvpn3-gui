@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: OpenVPN 3 GUI
 Upstream-Contact: Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>
-Source: Local source repository; public repository URL not yet assigned.
+Source: https://github.com/shuvo072/openvpn3-gui
 
 Files: *
 Copyright: 2026 Mehadi Hasan Shuvo and OpenVPN 3 GUI contributors

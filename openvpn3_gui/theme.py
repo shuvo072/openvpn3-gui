@@ -1,52 +1,58 @@
-"""Application palette with readable states and visible keyboard focus."""
+"""Connect-inspired navy/orange palette; project artwork remains independent."""
 
 CSS = b"""
-window, dialog { background: #f3f5fa; color: #18243a; font-family: sans-serif; font-size: 14px; }
-headerbar { background: #ffffff; color: #18243a; border-bottom: 1px solid #e3e8f0; box-shadow: none; }
-headerbar .subtitle { color: #66758d; }
-.sidebar { background: #142238; padding: 24px 12px 18px; }
-.sidebar image { color: #bbc9dd; }
-.sidebar label { color: #bbc9dd; }
+window, dialog { background: #101325; color: #edf0f7; font-family: Inter, sans-serif; font-size: 14px; }
+headerbar { background: #101325; color: #edf0f7; border-bottom: 1px solid #2b3148; box-shadow: none; }
+headerbar .subtitle { color: #aeb8ce; }
+.sidebar { background: #0c1020; border-right: 1px solid #2b3148; padding: 24px 12px 18px; }
+.sidebar image, .sidebar label { color: #b7c0d5; }
 .sidebar list { background: transparent; }
-.sidebar row { border-radius: 10px; margin: 4px 0; padding: 13px 12px; }
-.sidebar row:hover { background: #21334e; }
-.sidebar row:selected { background: #2c4162; }
-.sidebar row:selected label, .sidebar row:selected image { color: #ffffff; }
-.brand { font-size: 19px; font-weight: bold; color: #ffffff; }
-.brand-icon { background: #4265ed; color: white; padding: 10px; border-radius: 12px; }
-.sidebar .sidebar-note { color: #a8bad2; font-size: 12px; }
-.page-title { font-size: 29px; font-weight: bold; color: #18243a; }
-.section-title { font-size: 21px; font-weight: bold; color: #18243a; }
-.eyebrow { font-size: 11px; font-weight: bold; color: #64748b; letter-spacing: 1px; }
-.muted { color: #596b82; font-size: 13px; }
-.card { background: #ffffff; border: 1px solid #e1e7f0; border-radius: 14px; padding: 22px; }
-.metric { background: #ffffff; border: 1px solid #e1e7f0; border-radius: 12px; padding: 12px 18px; }
-.metric-value { font-size: 26px; font-weight: bold; color: #243855; }
-.metric-icon { color: #4968cf; padding-right: 14px; }
-.vpn-list { background: #ffffff; border: 1px solid #e1e7f0; border-radius: 14px; padding: 12px; }
-.connection-icon { background: #eff2ff; color: #4c64d9; border-radius: 14px; padding: 12px; }
-.status-pill { border-radius: 14px; padding: 7px 12px; font-size: 12px; font-weight: bold; background: #edf1f6; color: #506078; }
-.status-pill.online { background: #e4f5ed; color: #126b47; }
-.status-pill.pending { background: #fff3d9; color: #86520b; }
-.status-pill.failed { background: #ffebeb; color: #9e3030; }
-.connection-note { font-size: 13px; color: #596b82; }
-.command-preview { font-family: monospace; font-size: 12px; color: #334c76; background: #edf1f9; padding: 12px; border-radius: 9px; }
-.error-banner { background: #ffeded; color: #8d2c35; padding: 12px; border-radius: 9px; }
-.success-banner { background: #e8f4ef; color: #196247; padding: 12px; border-radius: 9px; }
+.sidebar row { border-radius: 8px; border-left: 3px solid transparent; margin: 4px 0; padding: 13px 10px; }
+.sidebar row:hover { background: #1d243b; }
+.sidebar row:selected { background: #2c2630; border-left-color: #ed7f22; }
+.sidebar row:selected label, .sidebar row:selected image { color: #ffb574; }
+.sidebar .brand { font-size: 18px; font-weight: bold; color: #ffffff; }
+.sidebar .sidebar-note { color: #aeb8ce; font-size: 12px; }
+.sidebar .brand-caption { font-size: 10px; color: #b7c0d5; letter-spacing: 1px; }
+.page-title { font-size: 29px; font-weight: bold; color: #ffffff; }
+.section-title { font-size: 21px; font-weight: bold; color: #ffffff; }
+.eyebrow { font-size: 11px; font-weight: bold; color: #b7c0d5; letter-spacing: 1px; }
+.muted { color: #b7c0d5; font-size: 13px; }
+.card { background: #191e32; border: 1px solid #3a435e; border-radius: 16px; padding: 22px; }
+.card.connected { border-color: #39b78f; }
+.metric { background: #191e32; border: 1px solid #30394f; border-radius: 12px; padding: 12px 18px; }
+.metric-value { font-size: 26px; font-weight: bold; color: #ffffff; }
+.metric-icon { color: #ed7f22; padding-right: 14px; }
+.vpn-list { background: #191e32; border: 1px solid #30394f; border-radius: 16px; padding: 12px; }
+.connection-icon { background: #252d47; border-radius: 12px; padding: 10px; }
+.status-pill { border-radius: 14px; padding: 7px 12px; font-size: 12px; font-weight: bold; background: #2e354c; color: #d0d8e9; }
+.status-pill.online { background: #163c34; color: #8ce6c3; }
+.status-pill.pending { background: #493524; color: #ffca8d; }
+.status-pill.failed { background: #4b2933; color: #ffbec8; }
+.connection-note { font-size: 13px; color: #b7c0d5; }
+.command-preview { font-family: monospace; font-size: 12px; color: #d4ddf1; background: #232b43; padding: 12px; border-radius: 9px; }
+.error-banner { background: #4b2933; color: #ffbec8; padding: 12px; border-radius: 9px; }
+.success-banner { background: #163c34; color: #8ce6c3; padding: 12px; border-radius: 9px; }
 .notice { margin-top: 8px; }
-button { background-image: none; background-color: #ffffff; color: #344562; border: 1px solid #d7dfea; border-radius: 8px; padding: 9px 13px; box-shadow: none; text-shadow: none; }
-button:hover { background-color: #f0f3fa; border-color: #b3c0d6; }
-button:disabled { background-color: #f6f7fa; color: #7c8799; border-color: #e3e7ee; }
-button.suggested-action { background-color: #4763df; color: #ffffff; border-color: #4763df; font-weight: bold; }
-button.suggested-action:hover { background-color: #3452ce; }
-button.suggested-action:disabled { background-color: #d7deef; color: #61708f; border-color: #d7deef; }
-button.destructive-action { background-color: #fff1f1; color: #a0353d; border-color: #efcbd0; }
-button:focus, entry:focus { outline-color: #687ff0; outline-style: solid; outline-width: 2px; outline-offset: 2px; }
-treeview { background: #ffffff; color: #243855; padding: 13px 8px; border-color: #edf1f6; }
-treeview:selected { background: #eaf0ff; color: #2b46a6; }
-treeview header button { background: #ffffff; border: none; border-radius: 0; font-size: 12px; color: #66758d; padding: 8px; }
-entry { background: #ffffff; color: #243855; border: 1px solid #d7dfea; border-radius: 8px; padding: 9px; box-shadow: none; }
-expander { color: #52647d; }
-separator { background: #e8edf4; min-height: 1px; }
-.option-row { background: #ffffff; border: 1px solid #e2e8f1; border-radius: 9px; padding: 12px; }
+button { background-image: none; background-color: #29324b; color: #edf0f7; border: 1px solid #4b5774; border-radius: 8px; padding: 9px 13px; box-shadow: none; text-shadow: none; }
+button:hover { background-color: #36425e; border-color: #8392b1; }
+button:disabled { background-color: #20273b; color: #8b97b0; border-color: #36405a; }
+button.suggested-action { background-color: #ed7f22; color: #162146; border-color: #ed7f22; font-weight: bold; }
+button.suggested-action:hover { background-color: #ffa04e; border-color: #ffa04e; }
+button.suggested-action:disabled { background-color: #443528; color: #bca58e; border-color: #594633; }
+button.connection-active { background-color: #3d4966; color: #ffffff; border-color: #586887; }
+button.connection-active:hover { background-color: #4b5a7b; border-color: #8294b8; }
+button.destructive-action { background-color: #4b2933; color: #ffbec8; border-color: #9c5668; }
+button:focus, entry:focus { outline-color: #ffb574; outline-style: solid; outline-width: 2px; outline-offset: 2px; }
+treeview { background: #191e32; color: #edf0f7; padding: 13px 8px; border-color: #30394f; }
+treeview:selected { background: #3b2d25; color: #ffbd85; }
+treeview header button { background: #191e32; color: #b7c0d5; border: none; border-radius: 0; font-size: 12px; padding: 8px; }
+entry { background: #141a2d; color: #edf0f7; border: 1px solid #4b5774; border-radius: 8px; padding: 9px; box-shadow: none; }
+entry selection { background: #ed7f22; color: #162146; }
+checkbutton check:checked, radiobutton radio:checked { background-image: none; background-color: #ed7f22; border-color: #ed7f22; color: #162146; }
+expander { color: #c4cee4; }
+separator { background: #353e57; min-height: 1px; }
+.option-row { background: #191e32; border: 1px solid #3a435e; border-radius: 9px; padding: 12px; }
+popover, menu { background: #191e32; color: #edf0f7; }
+textview text { background: #141a2d; color: #edf0f7; }
 """
