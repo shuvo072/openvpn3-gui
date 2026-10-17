@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible desktop or CLI integration issue.
+body:
+  - type: markdown
+    attributes:
+      value: "For vulnerabilities, use SECURITY.md. Do not attach VPN configurations, credentials, private keys, or unredacted logs."
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: App version, distribution/version, desktop, and OpenVPN 3 version.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include expected and actual behavior, and whether it happens in demo mode.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: Relevant error text or a screenshot with private information removed.

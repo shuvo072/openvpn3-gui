@@ -1,0 +1,771 @@
+[
+  {
+    "name": "help",
+    "options": []
+  },
+  {
+    "name": "shell-completion",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "list-commands",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "list-options",
+        "argument": "COMMAND",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "arg-helper",
+        "argument": "OPTION",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "version",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      }
+    ]
+  },
+  {
+    "name": "config-import",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "config",
+        "argument": "CFG-FILE",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "name",
+        "argument": "NAME",
+        "optional": false,
+        "short": "n"
+      },
+      {
+        "name": "persistent",
+        "argument": "",
+        "optional": false,
+        "short": "p"
+      },
+      {
+        "name": "tag",
+        "argument": "TAG-NAME",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "config-manage",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "path",
+        "argument": "CONFIG-PATH",
+        "optional": false,
+        "short": "o"
+      },
+      {
+        "name": "config-path",
+        "argument": "CONFIG-PATH",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-NAME",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "rename",
+        "argument": "NEW-CONFIG-NAME",
+        "optional": false,
+        "short": "r"
+      },
+      {
+        "name": "tag",
+        "argument": "TAG-NAME",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "remove-tag",
+        "argument": "TAG-NAME",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "show",
+        "argument": "",
+        "optional": false,
+        "short": "s"
+      },
+      {
+        "name": "exists",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "quiet",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "dco",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "server-override",
+        "argument": "<value>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "port-override",
+        "argument": "<value>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "proto-override",
+        "argument": "<tcp|udp>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "ipv6",
+        "argument": "<yes|no|default>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "persist-tun",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "log-level",
+        "argument": "<1|2|3|4|5|6>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "dns-fallback-google",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "dns-setup-disabled",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "dns-scope",
+        "argument": "<global|tunnel>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "dns-sync-lookup",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "auth-fail-retry",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "allow-compression",
+        "argument": "<no|asym|yes>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "enable-legacy-algorithms",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "tls-version-min",
+        "argument": "<tls_1_0|tls_1_1|tls_1_2|tls_1_3>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "tls-cert-profile",
+        "argument": "<legacy|preferred|suiteb>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "proxy-host",
+        "argument": "<value>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "proxy-port",
+        "argument": "<value>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "proxy-username",
+        "argument": "<value>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "proxy-password",
+        "argument": "<value>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "proxy-auth-cleartext",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "enterprise-profile",
+        "argument": "<value>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "automatic-restart",
+        "argument": "<no|on-failure>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "unset-override",
+        "argument": "<name>",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "config-acl",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "path",
+        "argument": "OBJ-PATH",
+        "optional": false,
+        "short": "o"
+      },
+      {
+        "name": "config-path",
+        "argument": "OBJ-PATH",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-NAME",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "show",
+        "argument": "",
+        "optional": false,
+        "short": "s"
+      },
+      {
+        "name": "grant",
+        "argument": "<UID | username>",
+        "optional": false,
+        "short": "G"
+      },
+      {
+        "name": "revoke",
+        "argument": "<UID | username>",
+        "optional": false,
+        "short": "R"
+      },
+      {
+        "name": "public-access",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "transfer-owner-session",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": "T"
+      },
+      {
+        "name": "lock-down",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "seal",
+        "argument": "",
+        "optional": false,
+        "short": "S"
+      }
+    ]
+  },
+  {
+    "name": "config-dump",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "path",
+        "argument": "OBJ-PATH",
+        "optional": false,
+        "short": "o"
+      },
+      {
+        "name": "config-path",
+        "argument": "OBJ-PATH",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-NAME",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "json",
+        "argument": "",
+        "optional": false,
+        "short": "j"
+      }
+    ]
+  },
+  {
+    "name": "config-remove",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "path",
+        "argument": "OBJ-PATH",
+        "optional": false,
+        "short": "o"
+      },
+      {
+        "name": "config-path",
+        "argument": "OBJ-PATH",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-NAME",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "force",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "configs-list",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "count",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "json",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "verbose",
+        "argument": "",
+        "optional": false,
+        "short": "v"
+      },
+      {
+        "name": "filter-config",
+        "argument": "NAME-PREFIX",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "filter-tag",
+        "argument": "TAG-VALUE",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "filter-owner",
+        "argument": "OWNER",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "session-start",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-FILE",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "config-path",
+        "argument": "CONFIG-PATH",
+        "optional": false,
+        "short": "p"
+      },
+      {
+        "name": "persist-tun",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "timeout",
+        "argument": "SECS",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "background",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "dco",
+        "argument": "BOOL",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "session-manage",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "path",
+        "argument": "SESSION-PATH",
+        "optional": false,
+        "short": "o"
+      },
+      {
+        "name": "session-path",
+        "argument": "SESSION-PATH",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-NAME",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "interface",
+        "argument": "INTERFACE",
+        "optional": false,
+        "short": "I"
+      },
+      {
+        "name": "log-level",
+        "argument": "LEVEL",
+        "optional": true,
+        "short": ""
+      },
+      {
+        "name": "timeout",
+        "argument": "SECS",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "pause",
+        "argument": "",
+        "optional": false,
+        "short": "P"
+      },
+      {
+        "name": "resume",
+        "argument": "",
+        "optional": false,
+        "short": "R"
+      },
+      {
+        "name": "restart",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "disconnect",
+        "argument": "",
+        "optional": false,
+        "short": "D"
+      },
+      {
+        "name": "cleanup",
+        "argument": "",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "session-auth",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "auth-req",
+        "argument": "ID",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "session-acl",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "path",
+        "argument": "SESSION-PATH",
+        "optional": false,
+        "short": "o"
+      },
+      {
+        "name": "session-path",
+        "argument": "SESSION-PATH",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-NAME",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "interface",
+        "argument": "INTERFACE",
+        "optional": false,
+        "short": "I"
+      },
+      {
+        "name": "show",
+        "argument": "",
+        "optional": false,
+        "short": "s"
+      },
+      {
+        "name": "grant",
+        "argument": "<UID | username>",
+        "optional": false,
+        "short": "G"
+      },
+      {
+        "name": "revoke",
+        "argument": "<UID | username>",
+        "optional": false,
+        "short": "R"
+      },
+      {
+        "name": "public-access",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "allow-log-access",
+        "argument": "<true|false>",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  },
+  {
+    "name": "session-stats",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "path",
+        "argument": "SESSION-PATH",
+        "optional": false,
+        "short": "o"
+      },
+      {
+        "name": "session-path",
+        "argument": "SESSION-PATH",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-NAME",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "interface",
+        "argument": "INTERFACE",
+        "optional": false,
+        "short": "I"
+      },
+      {
+        "name": "json",
+        "argument": "",
+        "optional": false,
+        "short": "j"
+      }
+    ]
+  },
+  {
+    "name": "sessions-list",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      }
+    ]
+  },
+  {
+    "name": "log",
+    "options": [
+      {
+        "name": "help",
+        "argument": "",
+        "optional": false,
+        "short": "h"
+      },
+      {
+        "name": "session-path",
+        "argument": "SESSION-PATH",
+        "optional": false,
+        "short": ""
+      },
+      {
+        "name": "config",
+        "argument": "CONFIG-NAME",
+        "optional": false,
+        "short": "c"
+      },
+      {
+        "name": "interface",
+        "argument": "INTERFACE",
+        "optional": false,
+        "short": "I"
+      },
+      {
+        "name": "log-level",
+        "argument": "LOG-LEVEL",
+        "optional": false,
+        "short": ""
+      }
+    ]
+  }
+]

@@ -1,0 +1,35 @@
+openvpn3-gui (0.3.1) unstable; urgency=medium
+
+  * Fit long profile names and connection details within the content area.
+  * Adapt card layouts to the viewport and keep controls visible on resize.
+  * Add long-name layout regression checks and refreshed screenshots.
+  * Include a standalone APT staging helper and release checksums.
+  * Avoid runtime bytecode files in the installed application directory.
+  * Publish tested Debian packages and checksums through version-tag releases.
+
+ -- Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>  Thu, 15 Oct 2026 13:00:00 +0600
+
+openvpn3-gui (0.3.0) unstable; urgency=medium
+
+  * Refresh the desktop layout, status indicators, navigation,
+    and keyboard access.
+  * Add offline demo capabilities and recoverable setup/service errors.
+  * Expand regression tests, distribution checks, and reproducible packaging.
+  * Add MIT licensing, contributor documentation, and demo screenshots.
+
+ -- Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>  Thu, 15 Oct 2026 10:50:00 +0600
+
+openvpn3-gui (0.2.0) unstable; urgency=medium
+
+  * Combine profiles and live sessions on the My VPNs page.
+  * Run routine actions inline and automatically close successful prompts.
+  * Preserve errors and disconnect statistics, and match sessions by exact ID.
+
+ -- Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>  Thu, 15 Oct 2026 10:00:00 +0600
+
+openvpn3-gui (0.1.0) unstable; urgency=medium
+
+  * Initial local version: GTK profiles, sessions, CLI option forms,
+    interactive VTE commands, private configuration exports, and demo mode.
+
+ -- Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>  Thu, 15 Oct 2026 09:00:00 +0600

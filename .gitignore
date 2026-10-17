@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.deb
+.venv/
+*.ovpn
+*.key
+*.pem
+*.p12
+*.pfx

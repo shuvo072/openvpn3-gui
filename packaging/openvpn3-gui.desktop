@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OpenVPN 3 GUI
+Comment=Manage OpenVPN 3 profiles and connections
+Exec=openvpn3-gui
+Icon=openvpn3-gui
+Terminal=false
+Categories=Network;GTK;
+Keywords=VPN;OpenVPN;Tunnel;Network;
+StartupNotify=true
+StartupWMClass=openvpn3-gui

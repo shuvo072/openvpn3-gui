@@ -1,0 +1,16 @@
+#!/usr/bin/python3
+"""Launch from a checkout or /usr/share/openvpn3-gui without pip."""
+from pathlib import Path
+import sys
+
+# Keep installed application directories immutable, including when a package
+# manager or administrator invokes --version as root.
+sys.dont_write_bytecode = True
+
+root = Path(__file__).resolve().parent
+if not (root / "openvpn3_gui").is_dir():
+    root = root.parent / "share" / "openvpn3-gui"
+sys.path.insert(0, str(root))
+from openvpn3_gui.__main__ import main
+
+sys.exit(main())

@@ -1,0 +1,115 @@
+name: Publish Debian release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  metadata:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Check tag and release metadata
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: python3 scripts/release-check.py "$RELEASE_TAG"
+
+  checks:
+    needs: metadata
+    uses: ./.github/workflows/check.yml
+
+  build:
+    needs: [metadata, checks]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends dpkg-dev lintian
+      - name: Build and verify release files
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: |
+          ./scripts/build-deb.sh
+          python3 scripts/package-check.py
+          python3 scripts/installer-check.py
+          lintian --fail-on error,warning "dist/openvpn3-gui_${VERSION}_all.deb"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: debian-release
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            dist/openvpn3-gui_${{ needs.metadata.outputs.version }}_all.deb
+            dist/install-openvpn3-gui.sh
+            dist/SHA256SUMS
+
+  publish:
+    needs: [metadata, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: debian-release
+          path: dist
+      - name: Verify downloaded artifacts
+        working-directory: dist
+        run: sha256sum --check SHA256SUMS
+      - name: Upload assets and publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.metadata.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > release-notes.md <<EOF
+          Native GTK desktop client for OpenVPN 3 Linux on Debian and Ubuntu.
+
+          Download the Debian package and, for terminal installation, the optional installer helper. No source checkout is needed.
+
+          \`\`\`sh
+          sha256sum --check SHA256SUMS
+          sh ./install-openvpn3-gui.sh ./openvpn3-gui_${VERSION}_all.deb
+          \`\`\`
+
+          Configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) first if OpenVPN 3 is not already installed. The helper preserves APT's sandbox when installing from a private Downloads directory.
+
+          Read the [README](https://github.com/${GH_REPO}/blob/${RELEASE_TAG}/README.md) for screenshots and setup, the [changelog](https://github.com/${GH_REPO}/blob/${RELEASE_TAG}/packaging/changelog) for changes, and the [test report](https://github.com/${GH_REPO}/blob/${RELEASE_TAG}/docs/TESTING.md) for coverage and limitations. Checksums verify download integrity; they are not a publisher signature.
+          EOF
+          # Keep a release hidden until every asset has uploaded successfully.
+          # A rerun may finish a draft, but never overwrite a published release.
+          if gh release view "$RELEASE_TAG" --json isDraft > existing-release.json; then
+            if ! jq -e '.isDraft == true' existing-release.json > /dev/null; then
+              echo "::error::This version is already published. Create a new version instead."
+              exit 1
+            fi
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "OpenVPN 3 GUI ${RELEASE_TAG}" --notes-file release-notes.md
+          fi
+          gh release upload "$RELEASE_TAG" --clobber \
+            "dist/openvpn3-gui_${VERSION}_all.deb" \
+            dist/install-openvpn3-gui.sh dist/SHA256SUMS
+          gh release edit "$RELEASE_TAG" --draft=false
