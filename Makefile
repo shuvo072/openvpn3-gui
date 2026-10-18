@@ -1,4 +1,4 @@
-.PHONY: run demo test check integration screenshots deb install
+.PHONY: tui tui-demo run demo test check integration screenshots deb install
 run:
 	/usr/bin/python3 -m openvpn3_gui
 demo:
@@ -15,3 +15,8 @@ deb:
 	./scripts/build-deb.sh
 install: deb
 	./scripts/install-deb.sh
+
+tui:
+	./openvpn3-tui
+tui-demo:
+	./openvpn3-tui --demo

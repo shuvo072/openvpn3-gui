@@ -1,12 +1,16 @@
 Package: openvpn3-gui
-Version: 0.4.0
+Version: 0.5.0
 Section: net
 Priority: optional
 Architecture: all
 Maintainer: Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>
+Provides: openvpn3-tui (= 0.5.0)
+Conflicts: openvpn3-tui
+Replaces: openvpn3-tui
 Depends: python3 (>= 3.9), python3-gi, python3-cairo, python3-gi-cairo, gir1.2-gtk-3.0, gir1.2-vte-2.91, librsvg2-common, openvpn3
 Recommends: adwaita-icon-theme
 Description: Native GTK desktop companion for OpenVPN 3 Linux
  Manage VPN profiles and sessions with exact D-Bus identifiers.
  Exposes the installed CLI commands and options in graphical forms,
  with a VTE terminal for interactive authentication and live logs.
+ Includes the terminal client for use from a console or over SSH.

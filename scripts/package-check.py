@@ -17,15 +17,69 @@ assert (ROOT / "dist/install-openvpn3-gui.sh").read_bytes() == (
     ROOT / "scripts/install-deb.sh"
 ).read_bytes()
 subprocess.run(["sha256sum", "--check", "SHA256SUMS"], cwd=ROOT / "dist", check=True)
+tui_package = ROOT / "dist" / f"openvpn3-tui_{__version__}_all.deb"
 first = hashlib.sha256(package.read_bytes()).hexdigest()
+tui_first = hashlib.sha256(tui_package.read_bytes()).hexdigest()
 subprocess.run([str(ROOT / "scripts" / "build-deb.sh")], check=True)
 assert (
     hashlib.sha256(package.read_bytes()).hexdigest() == first
 ), "Package builds must be reproducible"
 
+assert hashlib.sha256(tui_package.read_bytes()).hexdigest() == tui_first
 with tempfile.TemporaryDirectory(prefix="openvpn3-package-check-") as temporary:
     stage = Path(temporary)
+    # Each alternative must work when extracted independently.
+    tui_stage = stage / "tui"
+    subprocess.run(["dpkg-deb", "-R", str(tui_package), str(tui_stage)], check=True)
+    tui_control = (tui_stage / "DEBIAN/control").read_text()
+    assert (
+        "gir1.2-gtk" not in tui_control
+        and "vte" not in tui_control
+        and "cairo" not in tui_control
+    )
+    tui_files = {
+        p.relative_to(tui_stage)
+        for p in tui_stage.rglob("*")
+        if p.is_file() and "DEBIAN" not in p.parts
+    }
+    subprocess.run(
+        ["md5sum", "--quiet", "-c", "DEBIAN/md5sums"], cwd=tui_stage, check=True
+    )
     subprocess.run(["dpkg-deb", "-R", str(package), str(stage)], check=True)
+    gui_files = {
+        p.relative_to(stage)
+        for p in stage.rglob("*")
+        if p.is_file() and "DEBIAN" not in p.parts and tui_stage not in p.parents
+    }
+    shared = {p for p in tui_files if not str(p).startswith("usr/share/doc/")}
+    assert shared <= gui_files, "Desktop package must bundle the complete terminal runtime"
+    for path in shared:
+        assert (stage / path).read_bytes() == (tui_stage / path).read_bytes()
+    gui_control = (stage / "DEBIAN/control").read_text()
+    assert f"Provides: openvpn3-tui (= {__version__})" in gui_control
+    assert "Depends: openvpn3-tui" not in gui_control
+    assert "Conflicts: openvpn3-tui" in gui_control
+    assert "Replaces: openvpn3-tui" in gui_control
+    assert "Conflicts: openvpn3-gui" in tui_control
+    assert "Replaces: openvpn3-gui" in tui_control
+    subprocess.run([str(tui_stage / "usr/bin/openvpn3-tui"), "--version"], check=True)
+    subprocess.run([str(stage / "usr/bin/openvpn3-tui"), "--version"], check=True)
+    # Importing the TUI must not load GTK, even when it is installed.
+    environment_tui = {
+        **os.environ,
+        "PYTHONPATH": str(tui_stage / "usr/share/openvpn3-gui"),
+        "PYTHONDONTWRITEBYTECODE": "1",
+    }
+    subprocess.run(
+        [
+            "/usr/bin/python3",
+            "-c",
+            "import sys; from openvpn3_gui import tui; assert 'gi.repository.Gtk' not in sys.modules",
+        ],
+        cwd=tui_stage,
+        env=environment_tui,
+        check=True,
+    )
     launcher = stage / "usr/bin/openvpn3-gui"
     assert os.access(launcher, os.X_OK)
     environment = dict(os.environ)

@@ -50,7 +50,7 @@ jobs:
           ./scripts/build-deb.sh
           python3 scripts/package-check.py
           python3 scripts/installer-check.py
-          lintian --fail-on error,warning "dist/openvpn3-gui_${VERSION}_all.deb"
+          lintian --fail-on error,warning "dist/openvpn3-gui_${VERSION}_all.deb" "dist/openvpn3-tui_${VERSION}_all.deb"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: debian-release
@@ -58,6 +58,7 @@ jobs:
           retention-days: 7
           path: |
             dist/openvpn3-gui_${{ needs.metadata.outputs.version }}_all.deb
+            dist/openvpn3-tui_${{ needs.metadata.outputs.version }}_all.deb
             dist/install-openvpn3-gui.sh
             dist/SHA256SUMS
 
@@ -85,14 +86,16 @@ jobs:
         run: |
           set -euo pipefail
           cat > release-notes.md <<EOF
-          Native GTK desktop client for OpenVPN 3 Linux on Debian and Ubuntu.
+          Desktop and terminal clients for OpenVPN 3 Linux on Debian and Ubuntu.
 
-          Download the Debian package and, for terminal installation, the optional installer helper. No source checkout is needed.
+          Download one Debian package: the GUI package includes both desktop and terminal interfaces. For a headless server, choose only the TUI package. The optional installer helper works for either. No source checkout is needed.
 
           \`\`\`sh
-          sha256sum --check SHA256SUMS
+          sha256sum --check --ignore-missing SHA256SUMS
           sh ./install-openvpn3-gui.sh ./openvpn3-gui_${VERSION}_all.deb
           \`\`\`
+
+          For a headless server, use the helper with \`openvpn3-tui_${VERSION}_all.deb\` instead, then launch \`openvpn3-tui\`. No desktop libraries are required.
 
           Configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) first if OpenVPN 3 is not already installed. The helper preserves APT's sandbox when installing from a private Downloads directory.
 
@@ -111,5 +114,6 @@ jobs:
           fi
           gh release upload "$RELEASE_TAG" --clobber \
             "dist/openvpn3-gui_${VERSION}_all.deb" \
+            "dist/openvpn3-tui_${VERSION}_all.deb" \
             dist/install-openvpn3-gui.sh dist/SHA256SUMS
           gh release edit "$RELEASE_TAG" --draft=false

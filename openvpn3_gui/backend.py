@@ -17,6 +17,41 @@ class CLIError(RuntimeError):
     pass
 
 
+def cancellable_read(argv, stopped, timeout=20):
+    """Reap a read-only CLI child promptly when its terminal client closes."""
+    if stopped.is_set():
+        raise CLIError("Client closed.")
+    with subprocess.Popen(
+        argv,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env={**os.environ, "LC_ALL": "C"},
+    ) as process:
+        deadline = time.monotonic() + timeout
+        try:
+            while True:
+                if stopped.is_set():
+                    raise CLIError("Client closed.")
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(argv, timeout)
+                try:
+                    out, err = process.communicate(timeout=min(0.2, remaining))
+                    return subprocess.CompletedProcess(
+                        argv, process.returncode, out, err
+                    )
+                except subprocess.TimeoutExpired:
+                    continue
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.communicate()
+
+
 def save_private_file(filename, content):
     """Atomically export a configuration with owner-only access, including overwrites."""
     filename = os.path.abspath(filename)
@@ -260,6 +295,7 @@ def demo_commands():
 class Backend:
     def __init__(self, demo=False):
         self.demo = demo
+        self.cancel_reads = None
         self._demo_sessions = None
         self._demo_profiles = None
         self._demo_traffic = {}
@@ -271,15 +307,20 @@ class Backend:
 
     def read(self, *arguments):
         try:
-            result = subprocess.run(
-                [self.executable, *arguments],
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=20,
-                env={**os.environ, "LC_ALL": "C"},
-            )
+            if self.cancel_reads is not None:
+                result = cancellable_read(
+                    [self.executable, *arguments], self.cancel_reads
+                )
+            else:
+                result = subprocess.run(
+                    [self.executable, *arguments],
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    timeout=20,
+                    env={**os.environ, "LC_ALL": "C"},
+                )
         except subprocess.TimeoutExpired as error:
             raise CLIError(
                 "OpenVPN did not respond within 20 seconds. Check the service and try Refresh."
@@ -369,6 +410,8 @@ class Backend:
             except GLib.Error:
                 return sessions
             for session in sessions:
+                if self.cancel_reads is not None and self.cancel_reads.is_set():
+                    break
                 try:
                     result = bus.call_sync(
                         "net.openvpn.v3.sessions",

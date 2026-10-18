@@ -1,8 +1,8 @@
 # Verification report
 
-Version: **0.4.0**
+Version: **0.5.0**
 
-Date: **2026-10-17**
+Date: **2026-10-18**
 
 Architecture tested: **x86-64**
 
@@ -16,7 +16,7 @@ Architecture tested: **x86-64**
 | Debian 12 container | 3.11 | Xvfb/D-Bus session, offline demo, backend tests, package checks | Passed |
 | Debian 13 container | 3.13 | Xvfb/D-Bus session, offline demo, backend tests, package checks | Passed |
 
-The local suite has **36 tests**: 23 backend/capability checks, 6 traffic-model tests, 3 appearance/preference tests, and 4 release-metadata tests. Containers run 35 tests and explicitly skip the installed-CLI test because OpenVPN is absent. Each container also runs five GTK/VTE suites and the package checks below. The four-container matrix was rerun for 0.4.0. Host desktop flows and the real-service profile lifecycle were additionally verified for 0.3.0.
+The local suite has **47 tests**: 23 backend/capability checks, 6 traffic-model tests, 3 appearance/preference tests, 10 terminal-model/cancellation tests, and 5 release-metadata tests. Containers run 46 tests and explicitly skip the installed-CLI test because OpenVPN is absent. Each container also runs a real PTY terminal suite, five GTK/VTE suites, and the package checks below. The four-container matrix was rerun for 0.5.0. Host desktop flows and the real-service profile lifecycle were additionally verified for 0.3.0.
 
 These container runs validate the application with each distribution's Python/GTK/VTE packages. They do not establish a real VPN or prove that OpenVPN's repository supports every OS/CPU combination. The table records local checks; current hosted runs are available in [GitHub Actions](https://github.com/shuvo072/openvpn3-gui/actions). The release workflow reruns the full matrix before publishing a version tag.
 
@@ -44,6 +44,16 @@ These container runs validate the application with each distribution's Python/GT
 
 The standalone installation helper was also exercised without the source checkout with real APT in disposable Ubuntu 22.04 and Debian 13 containers: fresh 0.3.1 installation, upgrade from 0.3.0, and package removal. Installation from a private directory completed without the `_apt` unsandboxed-download notice, preserved source permissions, and removed staging files. The launcher avoids runtime bytecode writes so even root `--version` checks do not leave cache files behind after removal. An empty `openvpn3` dependency fixture kept live VPN services out of these installation-only checks; this does not validate OpenVPN repository availability or its installation scripts.
 
+## Terminal and single-file package verification
+
+The terminal smoke suite drives the actual application through a pseudoterminal with DISPLAY and WAYLAND_DISPLAY unset. It covers resizing below the minimum and back, profile details, disconnect, password authentication without echo, Ctrl+C during live logs, cancelled deletion, advanced option entry and execution, import, rename, deletion, private export, and clean terminal restoration. It also starts/exits with Linux-console and monochrome VT100 terminal capabilities. Model tests cover duplicate profiles, multiple/orphan sessions, Unicode widths, control-character filtering, stale snapshots, service failures, secret-field masking, and prompt termination of stalled read subprocesses on exit.
+
+Fresh TUI-only installs were exercised with real APT in disposable Ubuntu 24.04 and Debian 13 containers, explicitly verifying that GTK and Cairo are absent. The installed `openvpn3-tui` passes the PTY suite; removal leaves no launchers or shared backend file. Desktop installation from just the GUI `.deb`, switching desktop → server → desktop, installed terminal interactions, file ownership, and removal were verified on Ubuntu 22.04/24.04 and Debian 12/13. Upgrades from GUI 0.4.0 and the earlier development 0.5.0 split packages were verified in Ubuntu 24.04. The desktop package owns both launchers and the shared backend after installation; no separate TUI package remains installed. These tests use an empty `openvpn3` dependency fixture; they do not test OpenVPN's installation scripts or a real server connection.
+
+Both alternative packages are checked independently for repeat-build equality, file permissions, manifests, installed launchers, and runtime data. The desktop archive must include the entire terminal runtime with identical files, provide its TUI version, and declare the package relationships needed to switch editions. A release check rejects any separate TUI dependency. Installer tests cover one-file installation for either edition, renamed package paths, rejection of multiple packages, cleanup, and APT-readable staging from private directories. Lintian reports no errors or warnings for either package.
+
+The GitHub Actions workflow includes application and single-file installation/switching checks on the four desktop distributions plus fresh headless install jobs on Ubuntu 24.04 and Debian 13. The release workflow waits for all checks and publishes both packages, the helper, and checksums.
+
 ## Real-service check
 
 `make integration` was run against the local OpenVPN 3 services for 0.3.0. It creates one randomly named, nonpersistent profile pointing to loopback, checks its exact ID, renames it, adds/removes a tag, reads its exported configuration and ACL, and removes it in a `finally` block. The later layout, packaging, and theme updates do not change this backend behavior.
@@ -52,7 +62,7 @@ The standalone installation helper was also exercised without the source checkou
 
 ## Limits
 
-A real VPN-server connection was not exercised. Live traffic is validated against simulated counters and the upstream JSON schema; a live-server throughput comparison was not performed. System appearance is tested with a simulated portal, not a full GNOME/KDE desktop settings matrix. Server-specific password/OTP/web authentication, certificate validation, routes, DNS behavior, reconnect after network changes, and DCO require end-to-end testing with a suitable test VPN. The simulated password flow validates the terminal integration, not every server authentication scheme.
+A real VPN-server connection was not exercised. The TUI was tested through a local PTY and installed-container PTY, not a remote SSH transport or hypervisor console. Live traffic is validated against simulated counters and the upstream JSON schema; a live-server throughput comparison was not performed. System appearance is tested with a simulated portal, not a full GNOME/KDE desktop settings matrix. Server-specific password/OTP/web authentication, certificate validation, routes, DNS behavior, reconnect after network changes, and DCO require end-to-end testing with a suitable test VPN. The simulated password flow validates the terminal integration, not every server authentication scheme.
 
 There has been no independent security audit, comprehensive screen-reader audit, ARM validation, or full desktop-environment matrix. The host desktop and Xvfb exercise different display paths, but they do not cover every compositor/theme combination.
 

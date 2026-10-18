@@ -1,9 +1,10 @@
-.TH OPENVPN3-GUI 1 "October 2026" "OpenVPN 3 GUI 0.4.0" "User Commands"
+.TH OPENVPN3-GUI 1 "October 2026" "OpenVPN 3 GUI 0.5.0" "User Commands"
 .SH NAME
 openvpn3-gui \- desktop interface for OpenVPN 3 Linux
 .SH SYNOPSIS
 .B openvpn3-gui
 .RB [ \-\-demo ]
+.RB [ \-\-tui ]
 .SH DESCRIPTION
 OpenVPN 3 GUI provides native GTK screens for profiles and sessions,
 forms for all commands and options exposed by the installed openvpn3
@@ -17,6 +18,9 @@ profiles, sessions, or network connections. CLI help is still read locally.
 .TP
 .B \-h, \-\-help
 Show command-line help and exit.
+.TP
+.B \-\-tui
+Launch the terminal interface without loading graphical libraries.
 .SH NOTES
 Closing the application does not disconnect established VPN sessions.
 Use My VPNs to disconnect. Configuration exports may contain private

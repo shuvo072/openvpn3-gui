@@ -32,6 +32,25 @@ def validate(root, tag):
         raise ValueError("Tag does not match the manual version")
     if f"openvpn3-gui_{version}_all.deb" not in (root / "README.md").read_text():
         raise ValueError("README must document the current package filename")
+    tui_control = (root / "packaging/control-tui").read_text()
+    if not re.search(rf"^Version: {re.escape(version)}$", tui_control, re.MULTILINE):
+        raise ValueError("Tag does not match TUI control")
+    if f"Provides: openvpn3-tui (= {version})" not in control:
+        raise ValueError("GUI must provide the bundled TUI version")
+    depends = re.search(r"^Depends: (.*)$", control, re.MULTILINE)
+    if depends and "openvpn3-tui" in depends[1]:
+        raise ValueError("GUI must install without a separate TUI package")
+    for metadata, other in [(control, "openvpn3-tui"), (tui_control, "openvpn3-gui")]:
+        for field in ["Conflicts", "Replaces"]:
+            if f"{field}: {other}\n" not in metadata:
+                raise ValueError("Alternative packages must declare Conflicts/Replaces")
+    if (
+        f'"OpenVPN 3 TUI {version}"'
+        not in (root / "packaging/openvpn3-tui.1").read_text()
+    ):
+        raise ValueError("Tag does not match TUI manual")
+    if f"openvpn3-tui_{version}_all.deb" not in (root / "README.md").read_text():
+        raise ValueError("README must document the TUI package")
     return version
 
 
