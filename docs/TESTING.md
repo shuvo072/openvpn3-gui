@@ -1,6 +1,6 @@
 # Verification report
 
-Version: **0.5.0**
+Version: **0.6.0**
 
 Date: **2026-10-18**
 
@@ -16,9 +16,9 @@ Architecture tested: **x86-64**
 | Debian 12 container | 3.11 | Xvfb/D-Bus session, offline demo, backend tests, package checks | Passed |
 | Debian 13 container | 3.13 | Xvfb/D-Bus session, offline demo, backend tests, package checks | Passed |
 
-The local suite has **47 tests**: 23 backend/capability checks, 6 traffic-model tests, 3 appearance/preference tests, 10 terminal-model/cancellation tests, and 5 release-metadata tests. Containers run 46 tests and explicitly skip the installed-CLI test because OpenVPN is absent. Each container also runs a real PTY terminal suite, five GTK/VTE suites, and the package checks below. The four-container matrix was rerun for 0.5.0. Host desktop flows and the real-service profile lifecycle were additionally verified for 0.3.0.
+The local suite has **56 tests**: 23 backend/capability checks, 6 traffic-model tests, 4 appearance/preference tests, 10 terminal-model/cancellation tests, 5 release-metadata tests, and 8 release-CI-gate tests. Containers run 55 tests and explicitly skip the installed-CLI test because OpenVPN is absent. Each container also runs a real PTY terminal suite, six GTK/VTE/tray suites, and the package checks below. The four-container matrix was rerun for 0.6.0. Host desktop flows and the real-service profile lifecycle were additionally verified for 0.3.0.
 
-These container runs validate the application with each distribution's Python/GTK/VTE packages. They do not establish a real VPN or prove that OpenVPN's repository supports every OS/CPU combination. The table records local checks; current hosted runs are available in [GitHub Actions](https://github.com/shuvo072/openvpn3-gui/actions). The release workflow reruns the full matrix before publishing a version tag.
+These container runs validate the application with each distribution's Python/GTK/VTE packages. They do not establish a real VPN or prove that OpenVPN's repository supports every OS/CPU combination. The table records local checks; current hosted runs are available in [GitHub Actions](https://github.com/shuvo072/openvpn3-gui/actions). The release workflow requires successful main push CI for the exact tagged commit instead of rerunning the full matrix. It still builds and verifies release packages before publishing.
 
 ## Coverage
 
@@ -52,7 +52,19 @@ Fresh TUI-only installs were exercised with real APT in disposable Ubuntu 24.04 
 
 Both alternative packages are checked independently for repeat-build equality, file permissions, manifests, installed launchers, and runtime data. The desktop archive must include the entire terminal runtime with identical files, provide its TUI version, and declare the package relationships needed to switch editions. A release check rejects any separate TUI dependency. Installer tests cover one-file installation for either edition, renamed package paths, rejection of multiple packages, cleanup, and APT-readable staging from private directories. Lintian reports no errors or warnings for either package.
 
-The GitHub Actions workflow includes application and single-file installation/switching checks on the four desktop distributions plus fresh headless install jobs on Ubuntu 24.04 and Debian 13. The release workflow waits for all checks and publishes both packages, the helper, and checksums.
+The GitHub Actions workflow includes application and single-file installation/switching checks on the four desktop distributions plus fresh headless install jobs on Ubuntu 24.04 and Debian 13. The release workflow checks the existing main CI result, then builds/verifies and publishes both packages, the helper, and checksums.
+
+## System tray verification
+
+The tray smoke test runs the real Ayatana library on an isolated D-Bus session with a simulated StatusNotifier watcher/host. It verifies indicator registration and exported icon/menu properties; connected, connecting, paused, disconnected and error states; exact session/profile IDs; menu activation; stale, busy and unavailable-service guards; visible authentication; quiet disconnect; and hidden-window error recovery.
+
+Lifecycle checks cover closing into the tray, reopening through application activation without a second main window, a host becoming unavailable, the watcher disappearing/restarting, missing tray libraries, disabling close-to-tray, explicit quit, and retaining established demo sessions when quitting. Preference tests verify that appearance and close behavior persist independently with owner-only permissions. The menu screenshot uses GTK widgets and demo data; actual panels render menus in their own style.
+
+The desktop package includes the Ayatana dependency, tray module, and all five original status icons; package checks exclude these from the standalone terminal package. The GTK/VTE/tray suite and real single-file installation/switching/removal tests passed on Ubuntu 22.04/24.04 and Debian 12/13. Real GNOME, KDE, XEmbed-only panels, compositor restarts, and shell extension versions were not exercised; host recovery here is a simulated D-Bus test. No real VPN was connected or disconnected by these tests.
+
+## Release CI gate verification
+
+Eight unit tests cover matching the exact workflow/repository/branch/event/commit, rejecting unsuccessful conclusions, preferring a newer failed or pending run over an older success, waiting for missing/pending runs, timeout and API failures, rerun attempts, and API filters. A temporary Git repository tests annotated tags, older commits in main history, and rejection of an unmerged feature commit. API failures block publication; no fallback bypasses the gate. Workflow syntax is checked with actionlint. These local checks do not publish a release or exercise a hosted token's permissions.
 
 ## Real-service check
 

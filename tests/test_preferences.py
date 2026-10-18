@@ -5,7 +5,14 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from openvpn3_gui.preferences import is_dark, preference_path, read_mode, write_mode
+from openvpn3_gui.preferences import (
+    is_dark,
+    preference_path,
+    read_mode,
+    write_mode,
+    read_keep_running,
+    write_keep_running,
+)
 
 
 class AppearanceTests(unittest.TestCase):
@@ -43,3 +50,22 @@ class AppearanceTests(unittest.TestCase):
             self.assertEqual(
                 preference_path(), Path.home() / ".config/openvpn3-gui/preferences.json"
             )
+
+
+class TrayPreferenceTests(unittest.TestCase):
+    def test_defaults_validation_and_independent_settings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            self.assertTrue(read_keep_running(path))
+            write_mode("dark", path)
+            write_keep_running(False, path)
+            self.assertEqual(read_mode(path), "dark")
+            self.assertFalse(read_keep_running(path))
+            write_mode("light", path)
+            self.assertFalse(read_keep_running(path))
+            self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+            for value in ('"false"', "0", "null"):
+                path.write_text('{"keep_running": ' + value + "}")
+                self.assertTrue(read_keep_running(path))
+            with self.assertRaises(ValueError):
+                write_keep_running("false", path)

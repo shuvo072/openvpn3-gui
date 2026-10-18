@@ -1,3 +1,12 @@
+openvpn3-gui (0.6.0) unstable; urgency=medium
+
+  * Add a system tray icon with per-session status and quick VPN actions.
+  * Keep the window in the tray only while a tray host is available.
+  * Add a saved close-to-tray preference and explicit app quit action.
+  * Include tray dependencies and icons in the single desktop package.
+
+ -- Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>  Sun, 18 Oct 2026 18:00:00 +0600
+
 openvpn3-gui (0.5.0) unstable; urgency=medium
 
   * Add a curses terminal client for local consoles, VM consoles and SSH.

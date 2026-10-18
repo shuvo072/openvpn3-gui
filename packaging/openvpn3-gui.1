@@ -1,4 +1,4 @@
-.TH OPENVPN3-GUI 1 "October 2026" "OpenVPN 3 GUI 0.5.0" "User Commands"
+.TH OPENVPN3-GUI 1 "October 2026" "OpenVPN 3 GUI 0.6.0" "User Commands"
 .SH NAME
 openvpn3-gui \- desktop interface for OpenVPN 3 Linux
 .SH SYNOPSIS
@@ -40,3 +40,15 @@ The connection card samples transport bytes for the selected connected session
 approximately every two seconds and plots the last 60 seconds. Counters include
 VPN overhead. Traffic history stays in memory. After disconnect, the card shows
 the last recorded snapshot; final CLI statistics are in Last action details.
+
+.SH SYSTEM TRAY
+The status icon provides per-session status, quick connect, disconnect,
+pause/resume, refresh, open-window and quit actions. Closing the window keeps
+the app in the tray only when a StatusNotifier host is available.
+Disable this behavior under About & help, System tray. Ctrl+Q requests a full
+exit. Quitting does not disconnect established VPN sessions.
+.PP
+If the tray host disappears while the window is hidden, the window reopens.
+GNOME may need an AppIndicator extension; no extension or login autostart is
+configured automatically. Connecting and resuming show authentication prompts
+in the main app. Demo mode does not persist the close-to-tray preference.

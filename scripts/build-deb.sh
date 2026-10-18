@@ -21,12 +21,13 @@ for KIND in tui gui; do
         CONTROL_FILE=control-tui
     else
         CONTROL_FILE=control
-        MODULES="$MODULES __main__ app appearance preferences theme traffic_widget widgets"
+        MODULES="$MODULES __main__ app appearance preferences theme traffic_widget tray widgets"
         install -d "$STAGE_DIR/usr/share/applications" "$STAGE_DIR/usr/share/icons/hicolor/scalable/apps" "$DOC_DIR/packaging"
         install -m 644 "$PROJECT_DIR/packaging/openvpn3-gui.desktop" "$STAGE_DIR/usr/share/applications/"
         install -m 644 "$PROJECT_DIR/packaging/openvpn3-gui.svg" "$STAGE_DIR/usr/share/icons/hicolor/scalable/apps/"
         install -m 644 "$PROJECT_DIR/packaging/openvpn3-gui.svg" "$MODULE_DIR/data/app-icon.svg"
         install -m 644 "$PROJECT_DIR/packaging/openvpn3-gui.svg" "$DOC_DIR/packaging/"
+        cp -R "$PROJECT_DIR/openvpn3_gui/data/tray" "$MODULE_DIR/data/tray"
         cp -R "$PROJECT_DIR/docs" "$DOC_DIR/docs"
     fi
     sed "s/^Version:.*/Version: $PACKAGE_VERSION/;s/openvpn3-tui (= [^)]*)/openvpn3-tui (= $PACKAGE_VERSION)/" "$PROJECT_DIR/packaging/$CONTROL_FILE" > "$STAGE_DIR/DEBIAN/control"
