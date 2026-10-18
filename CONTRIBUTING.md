@@ -9,7 +9,7 @@ Use the system Python so it can find distribution-provided PyGObject and VTE lib
 ```sh
 sudo apt install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-vte-2.91 gir1.2-ayatanaappindicator3-0.1 \
   adwaita-icon-theme librsvg2-common shared-mime-info fonts-dejavu-core \
-  desktop-file-utils shellcheck dpkg-dev xvfb xauth dbus-x11 at-spi2-core
+  desktop-file-utils git shellcheck dpkg-dev xvfb xauth dbus-x11 at-spi2-core
 ```
 
 Real OpenVPN is optional for demo development. `./openvpn3-gui --demo` never accesses real profiles or services. The installed-CLI coverage test runs when `openvpn3` is available; otherwise it is explicitly skipped.
@@ -80,7 +80,7 @@ Before announcing support for a new platform, record what was tested in `docs/TE
 
 ### Publish a GitHub release
 
-Submit version changes on a branch and merge through a pull request after the required checks pass. Do not bypass the protection on `main`. After the release commit is merged:
+Submit version changes on a branch and merge through a pull request after the required checks pass. Do not bypass the protection on `main`. After the release commit is merged and its **push CI on `main`** has passed:
 
 ```sh
 git switch main
@@ -92,11 +92,13 @@ git push origin v0.6.0
 
 Use a new `vMAJOR.MINOR.PATCH` tag for each release; never move an already published tag. The workflow rejects tags that disagree with the source version, Debian control file, newest changelog entry, manual, or README package filename. Prerelease tags are not supported yet.
 
-The release workflow runs the full Ubuntu/Debian check matrix, builds and validates the package on Ubuntu 24.04, checks repeat-build reproducibility and installer behavior, and runs Lintian. It then transfers the four release assets to a separate publishing job and checks their SHA-256 sums before uploading them. Only that final job has `contents: write`; it uses GitHub's built-in `GITHUB_TOKEN`, so no personal access token needs to be configured.
+The release workflow verifies that the tagged commit is in `main` history and that the latest `check.yml` push run on `main` for that exact commit completed successfully. PR, feature-branch, manual, and other-commit runs do not qualify. It waits up to 15 minutes for a missing or pending main run; a failed, cancelled, skipped, or otherwise unsuccessful run blocks release immediately. If the wait expires, let main CI finish and rerun the failed release jobs. A tag may select an older main commit only if that exact commit has successful main push CI.
+
+The full Ubuntu/Debian test matrix is **not rerun on tags**. All checkout jobs are pinned to the tag event SHA. After the CI gate passes, release builds and validates the packages on Ubuntu 24.04, checks repeat-build reproducibility and installer behavior, and runs Lintian. It then transfers the four release assets to a separate publishing job and checks their SHA-256 sums before uploading them. Only the CI gate has `actions: read`, and only that final publishing job has `contents: write`; it uses GitHub's built-in `GITHUB_TOKEN`, so no personal access token needs to be configured.
 
 The release stays a draft until every asset uploads successfully. Failed checks prevent publication. Rerun failed jobs in GitHub Actions to recover from a temporary failure; a publishing rerun can finish an existing draft but refuses to overwrite a published release. If repository or organization policy restricts Actions or token permissions, an administrator must enable the workflow's declared permissions.
 
-See [GitHub's reusable workflow documentation](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows) and [release CLI documentation](https://cli.github.com/manual/gh_release_create) for the underlying mechanisms.
+See [GitHub's workflow-runs API documentation](https://docs.github.com/en/rest/actions/workflow-runs#list-workflow-runs-for-a-workflow) and [release CLI documentation](https://cli.github.com/manual/gh_release_create) for the underlying mechanisms.
 
 ### Terminal and split-package checks
 
