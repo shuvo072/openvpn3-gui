@@ -29,6 +29,10 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-vte-2.91 xvfb xauth dbus-x11 at-spi2-core librsvg2-common shared-mime-info fonts-dejavu-core adwaita-icon-theme desktop-file-utils shellcheck dpkg-dev
       - name: Test offline desktop flows and Debian package
         run: dbus-run-session -- xvfb-run -a ./scripts/check.sh
+      - name: Install desktop from one Debian package and switch editions
+        env:
+          OPENVPN3_PACKAGE_TEST_CONTAINER: "1"
+        run: ./scripts/package-install-smoke.sh desktop
 
   headless:
     runs-on: ubuntu-latest

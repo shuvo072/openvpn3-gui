@@ -5,9 +5,9 @@ Priority: optional
 Architecture: all
 Maintainer: Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>
 Depends: python3 (>= 3.9), python3-gi, openvpn3
-Breaks: openvpn3-gui (<< 0.5.0)
-Replaces: openvpn3-gui (<< 0.5.0)
-Description: Terminal client and shared backend for OpenVPN 3 Linux
+Conflicts: openvpn3-gui
+Replaces: openvpn3-gui
+Description: Standalone terminal client for OpenVPN 3 Linux
  Manage profiles, sessions and traffic in a keyboard-driven curses interface.
  Runs in local consoles, VM consoles and SSH without graphical libraries.
- Includes the shared backend used by the optional openvpn3-gui package.
+ Choose this package for servers; the desktop package includes this client.

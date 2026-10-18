@@ -35,8 +35,15 @@ def validate(root, tag):
     tui_control = (root / "packaging/control-tui").read_text()
     if not re.search(rf"^Version: {re.escape(version)}$", tui_control, re.MULTILINE):
         raise ValueError("Tag does not match TUI control")
-    if f"openvpn3-tui (= {version})" not in control:
-        raise ValueError("GUI must depend on the matching TUI version")
+    if f"Provides: openvpn3-tui (= {version})" not in control:
+        raise ValueError("GUI must provide the bundled TUI version")
+    depends = re.search(r"^Depends: (.*)$", control, re.MULTILINE)
+    if depends and "openvpn3-tui" in depends[1]:
+        raise ValueError("GUI must install without a separate TUI package")
+    for metadata, other in [(control, "openvpn3-tui"), (tui_control, "openvpn3-gui")]:
+        for field in ["Conflicts", "Replaces"]:
+            if f"{field}: {other}\n" not in metadata:
+                raise ValueError("Alternative packages must declare Conflicts/Replaces")
     if (
         f'"OpenVPN 3 TUI {version}"'
         not in (root / "packaging/openvpn3-tui.1").read_text()

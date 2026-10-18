@@ -88,10 +88,10 @@ jobs:
           cat > release-notes.md <<EOF
           Desktop and terminal clients for OpenVPN 3 Linux on Debian and Ubuntu.
 
-          For the GUI, download both Debian packages. For a headless server, download only the TUI package. The optional installer helper works for either. No source checkout is needed.
+          Download one Debian package: the GUI package includes both desktop and terminal interfaces. For a headless server, choose only the TUI package. The optional installer helper works for either. No source checkout is needed.
 
           \`\`\`sh
-          sha256sum --check SHA256SUMS
+          sha256sum --check --ignore-missing SHA256SUMS
           sh ./install-openvpn3-gui.sh ./openvpn3-gui_${VERSION}_all.deb
           \`\`\`
 
