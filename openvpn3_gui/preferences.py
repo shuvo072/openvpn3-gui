@@ -1,4 +1,4 @@
-"""Small local appearance preference; no VPN data or credentials."""
+"""Small local desktop preferences; no VPN data or credentials."""
 
 import json
 import os
@@ -15,21 +15,42 @@ def preference_path():
     return base / "openvpn3-gui/preferences.json"
 
 
-def read_mode(path=None):
+def read_preferences(path=None):
     try:
         data = json.loads((path or preference_path()).read_text(encoding="utf-8"))
-        value = data.get("appearance") if isinstance(data, dict) else None
-        return value if value in MODES else "system"
+        return data if isinstance(data, dict) else {}
     except (OSError, ValueError):
-        return "system"
+        return {}
+
+
+def read_mode(path=None):
+    value = read_preferences(path).get("appearance")
+    return value if value in MODES else "system"
+
+
+def write_preference(key, value, path=None):
+    path = path or preference_path()
+    data = read_preferences(path)
+    data[key] = value
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    save_private_file(path, json.dumps(data) + "\n")
 
 
 def write_mode(mode, path=None):
     if mode not in MODES:
         raise ValueError("Unknown appearance mode")
-    path = path or preference_path()
-    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    save_private_file(path, json.dumps({"appearance": mode}) + "\n")
+    write_preference("appearance", mode, path)
+
+
+def read_keep_running(path=None):
+    value = read_preferences(path).get("keep_running", True)
+    return value if type(value) is bool else True
+
+
+def write_keep_running(enabled, path=None):
+    if type(enabled) is not bool:
+        raise ValueError("Expected a boolean")
+    write_preference("keep_running", enabled, path)
 
 
 def is_dark(mode, portal=None, desktop="default", fallback=False):

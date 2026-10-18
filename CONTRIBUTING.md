@@ -7,7 +7,7 @@ Improvements to usability, accessibility, compatibility, and test coverage are w
 Use the system Python so it can find distribution-provided PyGObject and VTE libraries:
 
 ```sh
-sudo apt install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-vte-2.91 \
+sudo apt install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-vte-2.91 gir1.2-ayatanaappindicator3-0.1 \
   adwaita-icon-theme librsvg2-common shared-mime-info fonts-dejavu-core \
   desktop-file-utils shellcheck dpkg-dev xvfb xauth dbus-x11 at-spi2-core
 ```
@@ -85,9 +85,9 @@ Submit version changes on a branch and merge through a pull request after the re
 ```sh
 git switch main
 git pull --ff-only origin main
-python3 scripts/release-check.py v0.5.0  # replace with the merged version
-git tag -a v0.5.0 -m "OpenVPN 3 GUI 0.5.0"
-git push origin v0.5.0
+python3 scripts/release-check.py v0.6.0  # replace with the merged version
+git tag -a v0.6.0 -m "OpenVPN 3 GUI 0.6.0"
+git push origin v0.6.0
 ```
 
 Use a new `vMAJOR.MINOR.PATCH` tag for each release; never move an already published tag. The workflow rejects tags that disagree with the source version, Debian control file, newest changelog entry, manual, or README package filename. Prerelease tags are not supported yet.
@@ -103,3 +103,10 @@ See [GitHub's reusable workflow documentation](https://docs.github.com/en/action
 `python3 scripts/tui-smoke.py` drives a real PTY without DISPLAY, including terminal restoration, password hiding, log interruption, and Linux-console mode. Unit tests cover exact identities, stale snapshots, safe terminal rendering, and cancelled deletion. No GUI imports belong in the TUI/backend path.
 
 The desktop package bundles all modules and both launchers. The standalone server package bundles only the terminal runtime. They are alternative editions: `Conflicts`/`Replaces` let APT switch editions without file collisions; the desktop package also `Provides` the matching terminal client version. Desktop installation must succeed with just its own `.deb`. Validate each archive independently and test both directions of switching with real APT in disposable containers. See [Debian's package relationship policy](https://www.debian.org/doc/debian-policy/ch-relationships.html#overwriting-files-and-replacing-packages-replaces). The curses lifecycle follows [Python's curses guide](https://docs.python.org/3/howto/curses.html), using `curses.wrapper` for terminal restoration.
+
+
+### Tray testing
+
+Run `dbus-run-session -- xvfb-run -a python3 scripts/tray-smoke.py` with the Ayatana typelib installed. The fixture owns a StatusNotifier watcher on an isolated session bus; never run it against a real desktop bus. It verifies actual indicator registration and exported properties, host absence/loss/recovery, exact-ID actions, quiet disconnect, window recovery, and explicit quit. It is not a complete GNOME/KDE panel test. Add `--screenshot` to refresh the demo menu preview.
+
+`openvpn3_gui/tray.py` follows the [Ayatana indicator API](https://github.com/AyatanaIndicators/libayatana-appindicator/blob/main/src/app-indicator.h). Window hiding requires both indicator registration and a registered StatusNotifier host. Package only the desktop tray assets and module; the standalone terminal package must not depend on Ayatana or GTK.

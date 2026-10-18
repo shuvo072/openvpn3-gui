@@ -52,7 +52,9 @@ with tempfile.TemporaryDirectory(prefix="openvpn3-package-check-") as temporary:
         if p.is_file() and "DEBIAN" not in p.parts and tui_stage not in p.parents
     }
     shared = {p for p in tui_files if not str(p).startswith("usr/share/doc/")}
-    assert shared <= gui_files, "Desktop package must bundle the complete terminal runtime"
+    assert (
+        shared <= gui_files
+    ), "Desktop package must bundle the complete terminal runtime"
     for path in shared:
         assert (stage / path).read_bytes() == (tui_stage / path).read_bytes()
     gui_control = (stage / "DEBIAN/control").read_text()
@@ -60,6 +62,16 @@ with tempfile.TemporaryDirectory(prefix="openvpn3-package-check-") as temporary:
     assert "Depends: openvpn3-tui" not in gui_control
     assert "Conflicts: openvpn3-tui" in gui_control
     assert "Replaces: openvpn3-tui" in gui_control
+    assert "gir1.2-ayatanaappindicator3-0.1" in gui_control
+    assert "ayatana" not in tui_control
+    assert not (tui_stage / "usr/share/openvpn3-gui/openvpn3_gui/tray.py").exists()
+    for state in ("connected", "disconnected", "connecting", "paused", "error"):
+        icon = (
+            Path("usr/share/openvpn3-gui/openvpn3_gui/data/tray")
+            / f"openvpn3-{state}.svg"
+        )
+        assert (stage / icon).is_file()
+        assert not (tui_stage / icon).exists()
     assert "Conflicts: openvpn3-gui" in tui_control
     assert "Replaces: openvpn3-gui" in tui_control
     subprocess.run([str(tui_stage / "usr/bin/openvpn3-tui"), "--version"], check=True)

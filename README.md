@@ -41,7 +41,7 @@ For real connections, install **OpenVPN 3 Linux** using the [official OpenVPN in
 Install the desktop libraries:
 
 ```sh
-sudo apt install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-vte-2.91 adwaita-icon-theme librsvg2-common
+sudo apt install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-vte-2.91 gir1.2-ayatanaappindicator3-0.1 adwaita-icon-theme librsvg2-common
 ```
 
 ### 2. Run from source
@@ -76,7 +76,7 @@ Run this as your normal user. The build runs without root; the installer request
 To build without installing, use `make deb`. To install an already built or downloaded package from this checkout:
 
 ```sh
-./scripts/install-deb.sh ./dist/openvpn3-gui_0.5.0_all.deb
+./scripts/install-deb.sh ./dist/openvpn3-gui_0.6.0_all.deb
 ```
 
 Launch **OpenVPN 3 GUI** from your application menu or run `openvpn3-gui`.
@@ -91,12 +91,12 @@ Removing the GUI leaves OpenVPN's imported profiles and connections intact.
 
 ### Share the `.deb` with users
 
-The desktop package is **`dist/openvpn3-gui_0.5.0_all.deb`** and includes **both the GUI and TUI**. Desktop users download this one `.deb`; no separate TUI package is needed. For servers, distribute only **`dist/openvpn3-tui_0.5.0_all.deb`**. The desktop edition installs the application, desktop launcher, icon, manuals, and documentation into standard system locations. Recipients do not need this source checkout, Python development tools, or `make`. APT resolves the declared runtime dependencies; recipients must first configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) for their supported distribution if OpenVPN 3 is not already installed.
+The desktop package is **`dist/openvpn3-gui_0.6.0_all.deb`** and includes **both the GUI and TUI**. Desktop users download this one `.deb`; no separate TUI package is needed. For servers, distribute only **`dist/openvpn3-tui_0.6.0_all.deb`**. The desktop edition installs the application, desktop launcher, icon, manuals, and documentation into standard system locations. Recipients do not need this source checkout, Python development tools, or `make`. APT resolves the declared runtime dependencies; recipients must first configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) for their supported distribution if OpenVPN 3 is not already installed.
 
 Users can open the `.deb` with their desktop's package installer, if available. For terminal installation, distribute the optional **`dist/install-openvpn3-gui.sh`** alongside it. From the directory containing your chosen `.deb` file and helper:
 
 ```sh
-sh ./install-openvpn3-gui.sh ./openvpn3-gui_0.5.0_all.deb
+sh ./install-openvpn3-gui.sh ./openvpn3-gui_0.6.0_all.deb
 ```
 
 The helper works without the source checkout and stages your chosen package for APT's sandbox. Pass one `.deb` file; it installs independently of the other edition. The `.deb` cannot control permissions on the directory it is downloaded into: a direct `sudo apt install ./package.deb` from a private home directory can still print the `_apt` notice. Neither installation method downloads or runs an unverified bootstrap script or changes home-directory permissions.
@@ -108,7 +108,7 @@ The build also writes `dist/SHA256SUMS` for the package and helper. Distribute i
 The TUI runs locally as well as over SSH; it does not need a desktop or display server. Install OpenVPN 3 from its official repository first. Download the TUI package and helper, then run:
 
 ```sh
-sh ./install-openvpn3-gui.sh ./openvpn3-tui_0.5.0_all.deb
+sh ./install-openvpn3-gui.sh ./openvpn3-tui_0.6.0_all.deb
 openvpn3-tui
 ```
 
@@ -139,6 +139,25 @@ Commands show a redacted preview and ask for confirmation. They temporarily take
 ![Searchable terminal command picker](docs/screenshots/tui-advanced.png)
 
 Choose one edition: the desktop package includes both interfaces, and the server package includes the TUI only. Install the other edition with APT or the helper to switch; APT replaces the previous edition. Removing the desktop package removes both bundled interfaces. Neither package removes OpenVPN's profiles or stops its sessions.
+
+## System tray
+
+The desktop app adds a status icon to panels that support AppIndicator/StatusNotifier. Its badge distinguishes connected, connecting, paused, disconnected, and error states; the menu also shows text status for each session.
+
+- **Connect to VPN** lists saved profiles. Already active profiles are marked and disabled.
+- Each session has **Disconnect** and, when appropriate, **Pause** or **Resume** actions.
+- **Open OpenVPN 3 GUI** restores the window. **Refresh** checks profiles and sessions.
+- **Quit app (keep VPN connected)** exits the app; established tunnels remain managed by OpenVPN.
+
+Closing the window keeps the app in the tray by default when a tray host is available. Change this in **About & help → System tray → Keep running when the window is closed**. **Ctrl+Q** always requests a full exit. Finish active commands before quitting. Connecting or resuming opens the window for authentication; errors also reopen it.
+
+If no tray host is detected, closing exits normally. If the host disappears while the window is hidden, the app reopens it so controls remain accessible. Launching the app again also restores its existing window.
+
+On GNOME, enable an AppIndicator/StatusNotifier extension if your desktop does not already provide one, such as [Ubuntu's AppIndicator extension](https://github.com/ubuntu/gnome-shell-extension-appindicator). KDE Plasma supports StatusNotifier items. Panel placement and menu appearance are controlled by your desktop. The app does not install or enable shell extensions automatically.
+
+![Tray menu preview using sample VPN data](docs/screenshots/tray-menu.png)
+
+This preview is the app's GTK menu with demo data; the panel renders it in its own style. The desktop `.deb` includes the tray library and icons. Server/TUI installations remain free of graphical dependencies. Close behavior and appearance are saved together in the local preferences file; demo mode does not change either setting. The app must be running to show the icon; login autostart is not configured.
 
 ## Everyday use
 

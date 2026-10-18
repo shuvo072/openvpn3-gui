@@ -25,6 +25,8 @@ from .widgets import CommandForm, CommandWindow, button, confirm, label, scrolle
 from .appearance import Appearance
 from .traffic import TrafficHistory
 from .traffic_widget import TrafficPanel
+from .tray import Tray
+from .preferences import read_keep_running, write_keep_running
 
 
 def application_icon_path():
@@ -59,6 +61,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.groups = {}
         self.selected_key = None
         self.closed = False
+        self.tray = None
+        self.keep_running = read_keep_running() if not backend.demo else True
         self.layout_pending = False
         self.traffic_records = OrderedDict()
         self.traffic_inflight = False
@@ -194,6 +198,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.refresh()
         self.poll_id = GLib.timeout_add_seconds(5, self.poll)
         self.traffic_poll_id = GLib.timeout_add(2000, self.poll_traffic)
+        self.tray = Tray(self)
+        self.tray_availability_changed(self.tray.available, self.tray.reason)
 
     def change_appearance(self, combo):
         try:
@@ -304,6 +310,8 @@ class MainWindow(Gtk.ApplicationWindow):
         future.add_done_callback(delivered)
 
     def show_error(self, error):
+        if not self.get_visible():
+            self.present()
         self.banner.get_style_context().remove_class("success-banner")
         self.banner.get_style_context().add_class("error-banner")
         self.banner.set_text(str(error))
@@ -332,7 +340,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 self.import_profile()
                 return True
             if event.keyval in (Gdk.KEY_q, Gdk.KEY_Q):
-                self.close()
+                self.request_quit()
                 return True
         return False
 
@@ -670,6 +678,24 @@ class MainWindow(Gtk.ApplicationWindow):
         ):
             content.pack_start(label(heading, "section-title"), False, False, 0)
             content.pack_start(label(body, "muted"), False, False, 0)
+        content.pack_start(label("System tray", "section-title"), False, False, 0)
+        self.keep_running_check = Gtk.CheckButton(
+            label="Keep running when the window is closed"
+        )
+        self.keep_running_check.set_active(self.keep_running)
+        self.keep_running_check.connect("toggled", self.change_keep_running)
+        content.pack_start(self.keep_running_check, False, False, 0)
+        self.tray_note = label("Checking tray support…", "muted")
+        content.pack_start(self.tray_note, False, False, 0)
+        content.pack_start(
+            label(
+                "Quit from the tray menu or press Ctrl+Q to exit. Quitting keeps established VPN sessions connected.",
+                "muted",
+            ),
+            False,
+            False,
+            0,
+        )
         self.coverage = label("Discovering CLI capabilities…", "muted")
         content.pack_start(self.coverage, False, False, 0)
         content.pack_start(
@@ -793,6 +819,8 @@ class MainWindow(Gtk.ApplicationWindow):
                 if self.refresh_error:
                     self.refresh_error = False
                     self.show_status("VPN services are available again.")
+            if self.tray:
+                self.tray.update()
             if self.refresh_again:
                 self.refresh_again = False
                 self.refresh()
@@ -902,6 +930,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.update_actions()
 
     def update_actions(self):
+        if self.tray:
+            self.tray.update()
         if not hasattr(self, "primary_button"):
             return
         self.render_traffic()
@@ -1303,7 +1333,29 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.background(lambda: self.backend.dump_profile(profile["path"]), loaded)
 
-    def on_close(self, *_):
+    def change_keep_running(self, checkbox):
+        self.keep_running = checkbox.get_active()
+        if not self.backend.demo:
+            try:
+                write_keep_running(self.keep_running)
+            except OSError as error:
+                self.show_error(
+                    "Window behavior changed, but could not be saved: " + str(error)
+                )
+
+    def tray_availability_changed(self, available, reason):
+        self.tray_note.set_text(reason)
+        if not available and not self.get_visible() and not self.closed:
+            self.present()
+            self.show_status(
+                "The tray is unavailable, so the window has been reopened."
+            )
+
+    def request_quit(self, *_):
+        if not self.on_close(force=True):
+            self.destroy()
+
+    def on_close(self, *_, force=False):
         if self.busy:
             self.show_error("An action is still running. Please wait for it to finish.")
             return True
@@ -1322,10 +1374,15 @@ class MainWindow(Gtk.ApplicationWindow):
         for window in list(self.get_application().get_windows()):
             if window is not self:
                 window.destroy()
+        if not force and self.keep_running and self.tray and self.tray.available:
+            self.hide()
+            return True
         return False
 
     def on_destroy(self, *_):
         self.closed = True
+        if self.tray:
+            self.tray.close()
         GLib.source_remove(self.poll_id)
         GLib.source_remove(self.traffic_poll_id)
         self.executor.shutdown(wait=False, cancel_futures=True)
@@ -1346,7 +1403,10 @@ class Application(Gtk.Application):
         Gtk.Application.do_shutdown(self)
 
     def do_activate(self):
-        window = self.get_active_window()
+        window = (
+            next((w for w in self.get_windows() if isinstance(w, MainWindow)), None)
+            or self.get_active_window()
+        )
         if window:
             window.present()
             return

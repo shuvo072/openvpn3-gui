@@ -6,6 +6,7 @@ cd "$PROJECT_DIR"
 /usr/bin/python3 -m unittest discover -s tests -v
 /usr/bin/python3 -m compileall -q openvpn3_gui scripts tests
 /usr/bin/python3 scripts/tui-smoke.py
+/usr/bin/python3 scripts/tray-smoke.py
 /usr/bin/python3 scripts/gui-smoke.py
 /usr/bin/python3 scripts/ux-smoke.py
 /usr/bin/python3 scripts/resilience-smoke.py
