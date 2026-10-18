@@ -17,12 +17,21 @@ def main():
     parser.add_argument(
         "--version", action="version", version=f"OpenVPN 3 GUI {__version__}"
     )
+    parser.add_argument(
+        "--tui",
+        action="store_true",
+        help="Use the terminal interface without a graphical display",
+    )
     options = parser.parse_args()
+    if options.tui:
+        from .tui import main as terminal_main
+
+        return terminal_main(["--demo"] if options.demo else [])
     try:
         from .app import Application
     except (ImportError, ValueError) as error:
         print(
-            f"Desktop dependency missing: {error}\nInstall: sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-vte-2.91",
+            f"Desktop dependency missing: {error}\nInstall: sudo apt install python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 gir1.2-vte-2.91\nFor the terminal client, run openvpn3-tui.",
             file=sys.stderr,
         )
         return 1
@@ -31,7 +40,7 @@ def main():
 
     if not Gtk.init_check()[0]:
         print(
-            "No graphical display is available. Start OpenVPN 3 GUI from your desktop session.",
+            "No graphical display is available. Use openvpn3-tui or openvpn3-gui --tui, or start the GUI from your desktop session.",
             file=sys.stderr,
         )
         return 1

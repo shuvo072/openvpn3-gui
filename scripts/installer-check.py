@@ -21,6 +21,9 @@ with tempfile.TemporaryDirectory(prefix="openvpn3-installer-check-") as temporar
     source = private / "package with spaces.deb"
     source.write_bytes(package.read_bytes())
     source.chmod(0o600)
+    companion = private / f"openvpn3-tui_{__version__}_all.deb"
+    companion.write_bytes((ROOT / "dist" / companion.name).read_bytes())
+    companion.chmod(0o600)
     binaries = private / "bin"
     binaries.mkdir()
     observation = private / "observation.json"
@@ -34,7 +37,11 @@ with tempfile.TemporaryDirectory(prefix="openvpn3-installer-check-") as temporar
         "sudo": '#!/bin/sh\ntouch "$TEST_SUDO_MARKER"\nexec "$@"\n',
         "apt-get": """#!/usr/bin/python3
 import hashlib, json, os, pathlib, sys
-assert len(sys.argv) == 3 and sys.argv[1] == "install", sys.argv
+assert len(sys.argv) in (3, 4) and sys.argv[1] == "install", sys.argv
+for argument in sys.argv[2:]:
+    item = pathlib.Path(argument)
+    assert item.stat().st_mode & 0o777 == 0o644
+    assert item.parent.stat().st_mode & 0o777 == 0o755
 package = pathlib.Path(sys.argv[2])
 assert package.is_absolute() and package.parent.parent == pathlib.Path("/tmp")
 assert package.parent.stat().st_mode & 0o777 == 0o755
@@ -80,6 +87,28 @@ sys.exit(int(os.environ["TEST_APT_STATUS"]))
         assert private.stat().st_mode & 0o777 == 0o700
         assert source.stat().st_mode & 0o777 == 0o600
 
+    renamed_companion = private / "server package with spaces.deb"
+    renamed_companion.write_bytes(companion.read_bytes())
+    result = subprocess.run(
+        [str(standalone), str(source), str(renamed_companion)],
+        env={**environment, "TEST_UID": "1000", "TEST_APT_STATUS": "0"},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    record = json.loads(observation.read_text())
+    assert not Path(record["path"]).parent.exists()
+    # The server package installs on its own; no GUI dependency is staged.
+    result = subprocess.run(
+        [str(standalone), str(companion)],
+        env={**environment, "TEST_UID": "1000", "TEST_APT_STATUS": "0"},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    record = json.loads(observation.read_text())
+    assert record["digest"] == hashlib.sha256(companion.read_bytes()).hexdigest()
+    assert not Path(record["path"]).parent.exists()
     observation.unlink()
     missing_argument = subprocess.run(
         [str(standalone)], env=environment, capture_output=True, text=True
@@ -88,7 +117,12 @@ sys.exit(int(os.environ["TEST_APT_STATUS"]))
     assert not observation.exists()
     invalid = private / "invalid.deb"
     invalid.write_text("not a Debian package")
-    for arguments in [[str(private / "missing.deb")], [str(invalid)], ["a", "b"]]:
+    for arguments in [
+        [str(private / "missing.deb")],
+        [str(invalid)],
+        ["a", "b"],
+        [str(source), str(source)],
+    ]:
         result = subprocess.run(
             [str(installer), *arguments], env=environment, capture_output=True
         )

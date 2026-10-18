@@ -1,0 +1,48 @@
+.TH OPENVPN3-TUI 1 "October 2026" "OpenVPN 3 TUI 0.5.0" "User Commands"
+.SH NAME
+openvpn3-tui \- terminal interface for OpenVPN 3 Linux
+.SH SYNOPSIS
+.B openvpn3-tui
+.RB [ \-\-demo ]
+.RB [ \-\-version ]
+.SH DESCRIPTION
+Manage OpenVPN profiles and sessions from a local console, VM console,
+terminal emulator or SSH. A graphical desktop is not required.
+Use the account that owns the OpenVPN profiles. Running with sudo changes
+the identity and profiles available to the client.
+.SH OPTIONS
+.TP
+.B \-\-demo
+Simulate profiles and commands without changing real VPN connections.
+.TP
+.B \-\-version
+Show the application version.
+.SH KEYS
+Arrow keys select a profile or session. Enter or C connects; D disconnects;
+P pauses or resumes; I imports; N renames; X deletes; E exports with
+owner-only permissions. V shows identifiers; S shows raw statistics;
+L opens logs; A opens all installed CLI commands and options.
+Slash searches; R refreshes; exclamation mark shows the full notification;
+question mark shows help; Q quits.
+.PP
+The command builder supports searchable options, repeated flags, optional
+values, and redacted previews. Escape cancels prompts. Ctrl+U clears input.
+Passwords entered in secret option fields are masked and not persisted.
+.SH AUTHENTICATION
+Commands temporarily take over the terminal for passwords, MFA, and other
+OpenVPN prompts. Ctrl+C stops a command; Enter returns to the dashboard.
+Output stays visible until you return. The app does not record credentials
+or command output. Terminal scrollback remains controlled by your terminal.
+.SH NOTES
+Requires a curses-capable terminal of at least 80 columns and 24 rows.
+Traffic is sampled for the selected connected session every two seconds.
+Rates are derived from transport byte counters, including VPN overhead.
+Charts use ASCII intensity levels and cover the last 60 seconds sampled.
+.PP
+Closing the client does not disconnect established sessions. A stopped CLI
+command may have already changed session state; refresh before retrying.
+Do not disconnect a VPN that carries your own remote administration session
+unless you have another way to reach the server.
+.SH SEE ALSO
+.BR openvpn3 (1),
+.BR openvpn3-gui (1)

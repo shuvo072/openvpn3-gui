@@ -94,6 +94,14 @@ def tick():
             state["width"] = window.dashboard_scroll.get_allocated_width()
             state["step"] = 1
         elif step == 1:
+            # Wait for the portal signal and completed GTK layout/animation.
+            # A fixed 300 ms delay can expire before the first frame on busy CI.
+            if (
+                app.appearance.portal != 2
+                or window.sidebar_revealer.get_child_revealed()
+                or window.dashboard_scroll.get_allocated_width() <= state["width"]
+            ):
+                return True
             assert app.appearance.portal == 2
             assert not app.appearance.dark
             assert not window.sidebar_revealer.get_child_revealed()
@@ -102,6 +110,8 @@ def tick():
             window.poll_traffic()
             state["step"] = 2
         elif step == 2:
+            if window.traffic_inflight:
+                return True
             if not window.traffic_records:
                 return True
             path = window.selected_session["path"]

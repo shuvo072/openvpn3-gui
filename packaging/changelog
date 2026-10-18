@@ -1,3 +1,13 @@
+openvpn3-gui (0.5.0) unstable; urgency=medium
+
+  * Add a curses terminal client for local consoles, VM consoles and SSH.
+  * Share exact profile/session identities and CLI discovery with the GUI.
+  * Add terminal traffic, authentication, import/export and advanced tools.
+  * Split the desktop and headless packages; publish both release assets.
+  * Verify PTY interactions, server-only installation and desktop upgrades.
+
+ -- Mehadi Hasan Shuvo <hasanshuvo.dev@gmail.com>  Sat, 17 Oct 2026 18:00:00 +0600
+
 openvpn3-gui (0.4.0) unstable; urgency=medium
 
   * Add collapsible navigation and simplify client labels and license placement.

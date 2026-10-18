@@ -16,10 +16,12 @@ class ReleaseMetadataTests(unittest.TestCase):
         self.root = Path(self.directory.name)
         self.files = {
             "openvpn3_gui/__init__.py": '__version__ = "1.2.3"\n',
-            "packaging/control": "Package: openvpn3-gui\nVersion: 1.2.3\n",
+            "packaging/control": "Package: openvpn3-gui\nVersion: 1.2.3\nDepends: openvpn3-tui (= 1.2.3)\n",
             "packaging/changelog": "openvpn3-gui (1.2.3) unstable; urgency=medium\n",
             "packaging/openvpn3-gui.1": '.TH OPENVPN3-GUI 1 "OpenVPN 3 GUI 1.2.3"\n',
-            "README.md": "Install openvpn3-gui_1.2.3_all.deb\n",
+            "packaging/control-tui": "Package: openvpn3-tui\nVersion: 1.2.3\n",
+            "packaging/openvpn3-tui.1": '.TH OPENVPN3-TUI 1 "OpenVPN 3 TUI 1.2.3"\n',
+            "README.md": "Install openvpn3-gui_1.2.3_all.deb and openvpn3-tui_1.2.3_all.deb\n",
         }
         for name, contents in self.files.items():
             path = self.root / name

@@ -4,9 +4,9 @@
 
 # OpenVPN 3 GUI
 
-**Your VPN profiles and connections, in one native Linux desktop app.**
+**Your VPN profiles and connections, on the desktop or in the terminal.**
 
-A GTK companion for OpenVPN 3 Linux on Debian and Ubuntu. Import a profile, connect, and manage the session from one screen. The full installed CLI remains available through graphical option forms.
+GTK and curses clients for OpenVPN 3 Linux on Debian and Ubuntu. Import a profile, connect, and manage the session from one screen. The full installed CLI remains available through graphical option forms.
 
 This is an independent community project, not OpenVPN Connect, and is not affiliated with or endorsed by OpenVPN Inc.
 
@@ -20,6 +20,7 @@ The light and dark interfaces with orange accents take visual cues from [OpenVPN
 
 ## What it does
 
+- **Desktop and server:** use the GUI or the keyboard-driven TUI in a local console, VM console, terminal emulator, or SSH. SSH is optional.
 - **One workspace:** saved profiles and active sessions appear together, with Connect/Disconnect, Pause/Resume, statistics, and logs.
 - **Live traffic:** received/sent speeds, session totals, and a 60-second chart directly in the connection card.
 - **Your preferred appearance:** follows the desktop by default; choose Light or Dark in the collapsible sidebar.
@@ -31,7 +32,7 @@ The light and dark interfaces with orange accents take visual cues from [OpenVPN
 
 ## Get started
 
-For a ready-to-install package, open [GitHub Releases](https://github.com/shuvo072/openvpn3-gui/releases) and download the `.deb`, `install-openvpn3-gui.sh`, and `SHA256SUMS` from the same release. Follow [the package installation instructions](#share-the-deb-with-users) below. Building from source is optional.
+For a ready-to-install package, open [GitHub Releases](https://github.com/shuvo072/openvpn3-gui/releases) and download both `.deb` files for the GUI, or only `openvpn3-tui` for a headless server, plus `install-openvpn3-gui.sh` and `SHA256SUMS` from the same release. Follow [the package installation instructions](#share-the-deb-with-users) below. Building from source is optional.
 
 ### 1. Install the prerequisites
 
@@ -75,7 +76,7 @@ Run this as your normal user. The build runs without root; the installer request
 To build without installing, use `make deb`. To install an already built or downloaded package from this checkout:
 
 ```sh
-./scripts/install-deb.sh ./dist/openvpn3-gui_0.4.0_all.deb
+./scripts/install-deb.sh ./dist/openvpn3-gui_0.5.0_all.deb
 ```
 
 Launch **OpenVPN 3 GUI** from your application menu or run `openvpn3-gui`.
@@ -90,17 +91,54 @@ Removing the GUI leaves OpenVPN's imported profiles and connections intact.
 
 ### Share the `.deb` with users
 
-The distributable package is **`dist/openvpn3-gui_0.4.0_all.deb`**. It installs the application, desktop launcher, icon, manual, and documentation into standard system locations. Recipients do not need this source checkout, Python development tools, or `make`. APT resolves the declared runtime dependencies; recipients must first configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) for their supported distribution if OpenVPN 3 is not already installed.
+The desktop package is **`dist/openvpn3-gui_0.5.0_all.deb`** and requires the matching **`dist/openvpn3-tui_0.5.0_all.deb`**, which contains the terminal client and shared backend. Distribute both for desktop users; server users need only the TUI package. It installs the application, desktop launcher, icon, manual, and documentation into standard system locations. Recipients do not need this source checkout, Python development tools, or `make`. APT resolves the declared runtime dependencies; recipients must first configure the [official OpenVPN 3 repository](https://openvpn.net/community-docs/openvpn-client-for-linux.html) for their supported distribution if OpenVPN 3 is not already installed.
 
-Users can open the `.deb` with their desktop's package installer, if available. For terminal installation, distribute the optional **`dist/install-openvpn3-gui.sh`** alongside it. From the directory containing both downloaded files:
+Users can open the `.deb` with their desktop's package installer, if available. For terminal installation, distribute the optional **`dist/install-openvpn3-gui.sh`** alongside it. From the directory containing the two `.deb` files and helper:
 
 ```sh
-sh ./install-openvpn3-gui.sh ./openvpn3-gui_0.4.0_all.deb
+sh ./install-openvpn3-gui.sh ./openvpn3-gui_0.5.0_all.deb
 ```
 
-The helper works without the source checkout and stages the package for APT's sandbox. The `.deb` cannot control permissions on the directory it is downloaded into: a direct `sudo apt install ./package.deb` from a private home directory can still print the `_apt` notice. Neither installation method downloads or runs an unverified bootstrap script or changes home-directory permissions.
+The helper works without the source checkout and stages the packages for APT's sandbox. When given the GUI package, it automatically finds the matching TUI package beside it. You can also pass both paths explicitly. The `.deb` cannot control permissions on the directory it is downloaded into: a direct `sudo apt install ./package.deb` from a private home directory can still print the `_apt` notice. Neither installation method downloads or runs an unverified bootstrap script or changes home-directory permissions.
 
-The build also writes `dist/SHA256SUMS` for the package and helper. Distribute it with the two files; recipients can run `sha256sum --check SHA256SUMS` to check download integrity. These checksums are not a publisher signature.
+The build also writes `dist/SHA256SUMS` for the package and helper. Distribute it with the release files; recipients can run `sha256sum --check SHA256SUMS` to check download integrity. For a TUI-only download, use `sha256sum --check --ignore-missing SHA256SUMS` to verify the files you downloaded. These checksums are not a publisher signature.
+
+## Terminal client (desktop, server, or VM)
+
+The TUI runs locally as well as over SSH; it does not need a desktop or display server. Install OpenVPN 3 from its official repository first. Download the TUI package and helper, then run:
+
+```sh
+sh ./install-openvpn3-gui.sh ./openvpn3-tui_0.5.0_all.deb
+openvpn3-tui
+```
+
+The server package depends on Python, PyGObject for system D-Bus, and OpenVPN 3. It does **not** depend on GTK, VTE, Cairo, or a display server. Desktop installations include the TUI automatically. Use the account that owns your VPN profiles; using `sudo` changes your OpenVPN identity.
+
+From source, install `python3` and `python3-gi`, then run `./openvpn3-tui`. Try `./openvpn3-tui --demo` without an OpenVPN installation or network changes. Desktop users can also run `openvpn3-gui --tui`.
+
+![Terminal dashboard with profile selection and inline traffic](docs/screenshots/tui-dashboard.png)
+
+| Key | Action |
+| --- | --- |
+| Up / Down | Select a profile or individual session |
+| Enter / C | Connect the selected disconnected profile |
+| D / P | Disconnect / pause or resume the selected session |
+| I / N / X | Import / rename / delete a profile |
+| E / V | Export privately / view full profile and session identifiers |
+| S / L | Raw statistics / live logs |
+| A | Advanced command builder |
+| / / R | Search / refresh |
+| ! / ? / Q | Full notification / help / quit |
+
+Use an 80×24 terminal or larger. Resize at any time. The client supports color and monochrome terminals and uses ASCII traffic charts. Duplicate names and multiple sessions remain distinct through exact profile/session IDs; **V** shows them in full. Profiles refresh every five seconds; selected connected-session traffic is sampled every two seconds. Both clients use the same counter definitions and rate calculations.
+
+Commands show a redacted preview and ask for confirmation. They temporarily take over the terminal for password/MFA prompts, errors, and output. **Ctrl+C** stops the command; press **Enter** afterward to return to the dashboard. Delete and permanent sealing require an explicit confirmation word, followed by any confirmation required by OpenVPN itself. Closing either interface leaves established VPN sessions running. Disconnecting a VPN used by your remote administration session may cut off that session.
+
+**Advanced tools** discovers all installed `openvpn3` commands and options. Type to filter commands/options, add repeated options, remove enabled options, and read command help. **Esc** cancels a picker or field; **Ctrl+U** clears a text field. Secret option values are masked in the editor and preview; prefer the CLI's interactive credential prompts because command-line values may be visible to local process inspection. The TUI does not persist credentials, command history, or traffic; your terminal controls its own scrollback.
+
+![Searchable terminal command picker](docs/screenshots/tui-advanced.png)
+
+The GUI and TUI share the Python backend installed under `/usr/share/openvpn3-gui`. The GUI package depends on the exact TUI version; upgrade the pair together. Removing the GUI can leave the TUI installed. Removing the TUI also removes the dependent GUI. Neither package removes OpenVPN's profiles or stops its sessions.
 
 ## Everyday use
 
